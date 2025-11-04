@@ -8,10 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select } from '@/components/ui/input';
 import { LoadingTable } from '@/components/ui/loading';
-import { ConfirmModal } from '@/components/ui/modal';
 import { useNotification } from '@/components/ui/notification';
 import { SubscriptionForm } from '@/components/forms/subscription-form';
-import { PauseReasonModal } from '@/components/forms/pause-reason-modal';
 import { subscriptionsApi } from '@/lib/api';
 import type { Subscription } from '@/lib/types';
 
@@ -33,11 +31,6 @@ function SubscriptionsContent() {
   
   // Modal states
   const [showSubscriptionForm, setShowSubscriptionForm] = useState(false);
-  const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
-  const [showPauseModal, setShowPauseModal] = useState(false);
-  const [pausingSubscription, setPausingSubscription] = useState<Subscription | null>(null);
-  const [showResumeConfirm, setShowResumeConfirm] = useState(false);
-  const [resumingSubscription, setResumingSubscription] = useState<Subscription | null>(null);
 
   useEffect(() => {
     fetchSubscriptions();
@@ -57,57 +50,7 @@ function SubscriptionsContent() {
   };
 
   const handleAddSubscription = () => {
-    setEditingSubscription(null);
     setShowSubscriptionForm(true);
-  };
-
-  const handleEditSubscription = (subscription: Subscription) => {
-    setEditingSubscription(subscription);
-    setShowSubscriptionForm(true);
-  };
-
-  const handlePauseClick = (subscription: Subscription) => {
-    setPausingSubscription(subscription);
-    setShowPauseModal(true);
-  };
-
-  const handlePause = async (reason: string) => {
-    if (!pausingSubscription) return;
-
-    try {
-      setActionLoading(pausingSubscription.id);
-      await subscriptionsApi.pause(pausingSubscription.id, reason);
-      await fetchSubscriptions();
-      success('Subscription Paused', `Subscription has been paused successfully. Reason: ${reason}`);
-      setShowPauseModal(false);
-      setPausingSubscription(null);
-    } catch (err) {
-      showError('Pause Failed', err instanceof Error ? err.message : 'Failed to pause subscription');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleResumeClick = (subscription: Subscription) => {
-    setResumingSubscription(subscription);
-    setShowResumeConfirm(true);
-  };
-
-  const handleResume = async () => {
-    if (!resumingSubscription) return;
-
-    try {
-      setActionLoading(resumingSubscription.id);
-      const result = await subscriptionsApi.resume(resumingSubscription.id);
-      await fetchSubscriptions();
-      success('Subscription Resumed', `Subscription resumed successfully. Days paused: ${result.days_paused}`);
-      setShowResumeConfirm(false);
-      setResumingSubscription(null);
-    } catch (err) {
-      showError('Resume Failed', err instanceof Error ? err.message : 'Failed to resume subscription');
-    } finally {
-      setActionLoading(null);
-    }
   };
 
   const handleFormSuccess = () => {
@@ -236,7 +179,7 @@ function SubscriptionsContent() {
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Member
+                        Subscription
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Plan
@@ -254,7 +197,7 @@ function SubscriptionsContent() {
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
+                        View Details
                       </th>
                     </tr>
                   </thead>
@@ -262,12 +205,17 @@ function SubscriptionsContent() {
                     {filteredSubscriptions.map((subscription) => (
                       <tr key={subscription.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                          <button
+                            onClick={() => window.location.href = `/subscriptions/${subscription.id}`}
+                            className="text-left w-full"
+                          >
+                            <div className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
                             Member ID: {subscription.member_id.slice(-8)}
-                          </div>
-                          <div className="text-sm text-gray-500">
+                            </div>
+                            <div className="text-sm text-gray-500">
                             {subscription.member_name}
-                          </div>
+                            </div>
+                          </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
@@ -317,40 +265,15 @@ function SubscriptionsContent() {
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex gap-2">
-                            {subscription.is_currently_paused ? (
-                              <Button
-                                variant="success"
-                                size="sm"
-                                onClick={() => handleResumeClick(subscription)}
-                                loading={actionLoading === subscription.id}
-                                disabled={actionLoading === subscription.id}
-                              >
-                                ▶️ Resume
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="warning"
-                                size="sm"
-                                onClick={() => handlePauseClick(subscription)}
-                                loading={actionLoading === subscription.id}
-                                disabled={
-                                  actionLoading === subscription.id || 
-                                  subscription.pause_days_remaining === 0 ||
-                                  getStatusText(subscription) === 'Expired'
-                                }
-                              >
-                                ⏸️ Pause
-                              </Button>
-                            )}
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleEditSubscription(subscription)}
-                            >
-                              Edit
-                            </Button>
-                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => window.location.href = `/subscriptions/${subscription.id}`}
+                            className="flex items-center gap-2"
+                          >
+                            <span>👁️</span>
+                            View Details
+                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -379,27 +302,7 @@ function SubscriptionsContent() {
           isOpen={showSubscriptionForm}
           onClose={() => setShowSubscriptionForm(false)}
           onSuccess={handleFormSuccess}
-          subscription={editingSubscription}
-        />
-
-        {/* Pause Reason Modal */}
-        <PauseReasonModal
-          isOpen={showPauseModal}
-          onClose={() => setShowPauseModal(false)}
-          onConfirm={handlePause}
-          loading={actionLoading === pausingSubscription?.id}
-        />
-
-        {/* Resume Confirmation Modal */}
-        <ConfirmModal
-          isOpen={showResumeConfirm}
-          onClose={() => setShowResumeConfirm(false)}
-          onConfirm={handleResume}
-          title="Resume Subscription"
-          message={`Are you sure you want to resume this subscription? The end date will be extended based on the pause duration.`}
-          confirmText="Resume"
-          variant="info"
-          loading={actionLoading === resumingSubscription?.id}
+          subscription={null}
         />
       </div>
     </Layout>
