@@ -202,7 +202,7 @@ function MembersContent() {
                   { value: 'all', label: 'All Status' },
                   { value: 'active', label: 'Active Members' },
                   { value: 'inactive', label: 'Inactive Members' },
-                  { value: 'suspended', label: 'Suspended Members' },
+                  // { value: 'suspended', label: 'Suspended Members' },
                 ]}
               />
               <Select
