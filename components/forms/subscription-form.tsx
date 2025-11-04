@@ -13,9 +13,10 @@ interface SubscriptionFormProps {
   onClose: () => void;
   onSuccess: () => void;
   subscription?: Subscription | null;
+  preSelectedMemberId?: string;
 }
 
-export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription }: SubscriptionFormProps) {
+export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, preSelectedMemberId }: SubscriptionFormProps) {
   const { success, error } = useNotification();
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
@@ -49,7 +50,7 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription }: S
     } else {
       // Reset form for new subscription
       setFormData({
-        member_id: '',
+        member_id: preSelectedMemberId || '',
         plan_id: '',
         start_date: new Date().toISOString().split('T')[0],
         end_date: '',
@@ -60,7 +61,7 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription }: S
     }
     // Clear errors when subscription changes
     setErrors({});
-  }, [subscription, isOpen]);
+  }, [subscription, preSelectedMemberId, isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -195,7 +196,7 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription }: S
       // Reset form data when closing
       if (!subscription) {
         setFormData({
-          member_id: '',
+          member_id: preSelectedMemberId || '',
           plan_id: '',
           start_date: new Date().toISOString().split('T')[0],
           end_date: '',
@@ -234,7 +235,8 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription }: S
               }))
             ]}
             error={errors.member_id}
-            disabled={loading || !!subscription}
+            disabled={loading || !!subscription || !!preSelectedMemberId}
+            helperText={preSelectedMemberId ? 'Member is pre-selected from the member page' : undefined}
           />
 
           <Select

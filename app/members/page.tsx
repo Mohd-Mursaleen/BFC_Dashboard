@@ -28,7 +28,7 @@ function MembersContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('active');
   const [genderFilter, setGenderFilter] = useState('all');
   
   // Modal states
@@ -40,15 +40,13 @@ function MembersContent() {
 
   useEffect(() => {
     fetchMembers();
-  }, []);
+  }, [statusFilter]);
 
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      const params: Record<string, string> = {};
-      if (statusFilter !== 'all') params.status = statusFilter;
-      
-      const response = await membersApi.getAll(params);
+      // Always fetch all members and filter on client side for better UX
+      const response = await membersApi.getAll();
       setMembers(response);
       setError(null);
     } catch (err) {
@@ -99,9 +97,10 @@ function MembersContent() {
                          member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.phone.includes(searchTerm);
     
+    const matchesStatus = statusFilter === 'all' || member.status === statusFilter;
     const matchesGender = genderFilter === 'all' || member.gender === genderFilter;
     
-    return matchesSearch && matchesGender;
+    return matchesSearch && matchesStatus && matchesGender;
   });
 
   const getStatusBadgeVariant = (status: string) => {
@@ -170,26 +169,44 @@ function MembersContent() {
         {/* Filters */}
         <Card>
           <CardHeader>
-            <h3 className="text-lg font-semibold">Filters</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Filters</h3>
+              {(statusFilter !== 'active' || genderFilter !== 'all' || searchTerm) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setStatusFilter('active');
+                    setGenderFilter('all');
+                    setSearchTerm('');
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
+                label="Search"
                 placeholder="Search by name, email, or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <Select
+                label="Status"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 options={[
                   { value: 'all', label: 'All Status' },
-                  { value: 'active', label: 'Active' },
-                  { value: 'inactive', label: 'Inactive' },
-                  { value: 'suspended', label: 'Suspended' },
+                  { value: 'active', label: 'Active Members' },
+                  { value: 'inactive', label: 'Inactive Members' },
+                  { value: 'suspended', label: 'Suspended Members' },
                 ]}
               />
               <Select
+                label="Gender"
                 value={genderFilter}
                 onChange={(e) => setGenderFilter(e.target.value)}
                 options={[
@@ -200,6 +217,46 @@ function MembersContent() {
                 ]}
               />
             </div>
+            
+            {/* Active Filters Display */}
+            {(statusFilter !== 'active' || genderFilter !== 'all' || searchTerm) && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="text-sm text-gray-600">Active filters:</span>
+                {statusFilter !== 'active' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md">
+                    Status: {statusFilter === 'all' ? 'All' : statusFilter}
+                    <button
+                      onClick={() => setStatusFilter('active')}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {genderFilter !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-md">
+                    Gender: {genderFilter}
+                    <button
+                      onClick={() => setGenderFilter('all')}
+                      className="text-purple-600 hover:text-purple-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {searchTerm && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-md">
+                    Search: "{searchTerm}"
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="text-green-600 hover:text-green-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -306,12 +363,24 @@ function MembersContent() {
                   <div className="text-center py-12">
                     <div className="text-4xl mb-4">👥</div>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No members found</h3>
-                    <p className="text-gray-500">
-                      {searchTerm || statusFilter !== 'all' || genderFilter !== 'all'
-                        ? 'Try adjusting your filters'
-                        : 'Get started by adding your first member'
+                    <p className="text-gray-500 mb-4">
+                      {searchTerm || statusFilter !== 'active' || genderFilter !== 'all'
+                        ? `No members match your current filters${statusFilter === 'active' ? ' (showing active members)' : ''}`
+                        : 'No active members found. Try changing the status filter or add your first member.'
                       }
                     </p>
+                    {(searchTerm || statusFilter !== 'active' || genderFilter !== 'all') && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setStatusFilter('active');
+                          setGenderFilter('all');
+                          setSearchTerm('');
+                        }}
+                      >
+                        Clear All Filters
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>

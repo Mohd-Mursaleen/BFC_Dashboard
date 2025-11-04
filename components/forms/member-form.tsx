@@ -256,7 +256,7 @@ export function MemberForm({ isOpen, onClose, onSuccess, member }: MemberFormPro
             options={[
               { value: 'active', label: 'Active' },
               { value: 'inactive', label: 'Inactive' },
-              { value: 'suspended', label: 'Suspended' },
+              // { value: 'suspended', label: 'Suspended' },
             ]}
             disabled={loading}
           />

@@ -210,10 +210,10 @@ function SubscriptionsContent() {
                             className="text-left w-full"
                           >
                             <div className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
-                            Member ID: {subscription.member_id.slice(-8)}
+                            {subscription.member_name}
                             </div>
                             <div className="text-sm text-gray-500">
-                            {subscription.member_name}
+                            Member ID: {subscription.member_id.slice(-8)}
                             </div>
                           </button>
                         </td>

@@ -11,8 +11,9 @@ import { LoadingSpinner } from '@/components/ui/loading';
 import { ConfirmModal } from '@/components/ui/modal';
 import { useNotification } from '@/components/ui/notification';
 import { MemberForm } from '@/components/forms/member-form';
-import { membersApi } from '@/lib/api';
-import type { Member } from '@/lib/types';
+import { SubscriptionForm } from '@/components/forms/subscription-form';
+import { membersApi, subscriptionsApi } from '@/lib/api';
+import type { Member, Subscription } from '@/lib/types';
 
 export default function MemberDetailPage() {
   return (
@@ -27,12 +28,15 @@ function MemberDetailContent() {
   const router = useRouter();
   const { success, error: showError } = useNotification();
   const [member, setMember] = useState<Member | null>(null);
+  const [memberSubscriptions, setMemberSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Modal states
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showSubscriptionForm, setShowSubscriptionForm] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const memberId = params.id as string;
@@ -40,6 +44,7 @@ function MemberDetailContent() {
   useEffect(() => {
     if (memberId) {
       fetchMember();
+      fetchMemberSubscriptions();
     }
   }, [memberId]);
 
@@ -53,6 +58,20 @@ function MemberDetailContent() {
       setError(err instanceof Error ? err.message : 'Failed to fetch member');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMemberSubscriptions = async () => {
+    try {
+      setSubscriptionsLoading(true);
+      const allSubscriptions = await subscriptionsApi.getAll();
+      // Filter subscriptions for this member
+      const memberSubs = allSubscriptions.filter((sub: Subscription) => sub.member_id === memberId);
+      setMemberSubscriptions(memberSubs);
+    } catch (err) {
+      console.error('Failed to fetch member subscriptions:', err);
+    } finally {
+      setSubscriptionsLoading(false);
     }
   };
 
@@ -81,6 +100,32 @@ function MemberDetailContent() {
 
   const handleFormSuccess = () => {
     fetchMember();
+  };
+
+  const handleAddSubscription = () => {
+    setShowSubscriptionForm(true);
+  };
+
+  const handleSubscriptionSuccess = () => {
+    fetchMemberSubscriptions();
+  };
+
+  const getSubscriptionStatusBadgeVariant = (subscription: Subscription) => {
+    const today = new Date().toISOString().split('T')[0];
+    const endDate = subscription.actual_end_date || subscription.end_date;
+    
+    if (endDate < today) return 'danger';
+    if (subscription.is_currently_paused) return 'warning';
+    return 'active';
+  };
+
+  const getSubscriptionStatusText = (subscription: Subscription) => {
+    const today = new Date().toISOString().split('T')[0];
+    const endDate = subscription.actual_end_date || subscription.end_date;
+    
+    if (endDate < today) return 'Expired';
+    if (subscription.is_currently_paused) return 'Paused';
+    return 'Active';
   };
 
   const calculateAge = (dateOfBirth: string) => {
@@ -155,19 +200,23 @@ function MemberDetailContent() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Button
+            {/* <Button
               variant="outline"
               onClick={() => router.push('/members')}
               className="flex items-center gap-2"
             >
               ← Back to Members
-            </Button>
+            </Button> */}
             <div>
               <h2 className="text-2xl font-bold text-gray-900">{member.full_name}</h2>
               <p className="text-gray-600">Member Details</p>
             </div>
           </div>
           <div className="flex gap-3">
+            <Button variant="success" onClick={handleAddSubscription}>
+              <span>📝</span>
+              Add Subscription
+            </Button>
             <Button variant="primary" onClick={handleEdit}>
               <span>✏️</span>
               Edit Member
@@ -304,6 +353,85 @@ function MemberDetailContent() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Member Subscriptions */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Subscriptions ({memberSubscriptions.length})</h3>
+                <Button variant="success" size="sm" onClick={handleAddSubscription}>
+                  <span>📝</span>
+                  Add Subscription
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {subscriptionsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingSpinner />
+                </div>
+              ) : memberSubscriptions.length > 0 ? (
+                <div className="space-y-4">
+                  {memberSubscriptions.map((subscription) => (
+                    <div
+                      key={subscription.id}
+                      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Badge variant={getSubscriptionStatusBadgeVariant(subscription)}>
+                              {getSubscriptionStatusText(subscription)}
+                            </Badge>
+                            <span className="text-sm font-medium text-gray-900">
+                              Receipt: {subscription.receipt_number}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-500">Duration:</span>
+                              <p className="font-medium">{formatDate(subscription.start_date)} - {formatDate(subscription.actual_end_date || subscription.end_date)}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Amount:</span>
+                              <p className="font-medium">₹{subscription.amount_paid.toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Payment:</span>
+                              <p className="font-medium uppercase">{subscription.payment_mode}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Pause Days:</span>
+                              <p className="font-medium">{subscription.pause_days_used} / {subscription.total_pause_days_allowed}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push(`/subscriptions/${subscription.id}`)}
+                          >
+                            View Details
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">📝</div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">No Subscriptions</h4>
+                  <p className="text-gray-500 mb-4">This member doesn't have any subscriptions yet.</p>
+                  <Button variant="success" onClick={handleAddSubscription}>
+                    <span>📝</span>
+                    Create First Subscription
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Edit Form Modal */}
@@ -312,6 +440,15 @@ function MemberDetailContent() {
           onClose={() => setShowEditForm(false)}
           onSuccess={handleFormSuccess}
           member={member}
+        />
+
+        {/* Add Subscription Modal */}
+        <SubscriptionForm
+          isOpen={showSubscriptionForm}
+          onClose={() => setShowSubscriptionForm(false)}
+          onSuccess={handleSubscriptionSuccess}
+          subscription={null}
+          preSelectedMemberId={member?.id}
         />
 
         {/* Delete Confirmation Modal */}

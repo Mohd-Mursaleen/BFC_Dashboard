@@ -79,6 +79,7 @@ export function PlanForm({ isOpen, onClose, onSuccess, plan }: PlanFormProps) {
     let pauseDays = 0;
     
     if (duration <= 1) pauseDays = 0;
+    else if (duration <= 2) pauseDays = 0;
     else if (duration <= 3) pauseDays = 15;
     else if (duration <= 6) pauseDays = 20;
     else pauseDays = 30;
@@ -202,6 +203,7 @@ export function PlanForm({ isOpen, onClose, onSuccess, plan }: PlanFormProps) {
             onChange={(e) => setFormData({ ...formData, duration_months: e.target.value })}
             options={[
               { value: '1', label: '1 Month' },
+              { value: '2', label: '2 Months' },
               { value: '3', label: '3 Months' },
               { value: '6', label: '6 Months' },
               { value: '12', label: '12 Months' },

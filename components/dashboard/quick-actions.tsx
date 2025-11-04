@@ -22,7 +22,7 @@ export function QuickActions({
       label: 'Add Member',
       icon: '👤',
       onClick: onAddMember,
-      variant: 'primary' as const,
+      variant: 'outline' as const,
     },
     {
       label: 'New Subscription',
