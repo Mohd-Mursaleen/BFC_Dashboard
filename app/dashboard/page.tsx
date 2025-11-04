@@ -32,22 +32,18 @@ export default function DashboardPage() {
   };
 
   const handleAddMember = () => {
-    // Navigate to add member page
-    window.location.href = '/members?action=add';
+    window.location.href = '/members';
   };
 
   const handleNewSubscription = () => {
-    // Navigate to new subscription page
-    window.location.href = '/subscriptions?action=add';
+    window.location.href = '/subscriptions';
   };
 
   const handleViewReports = () => {
-    // Navigate to analytics page
     window.location.href = '/analytics';
   };
 
   const handleManageScheduler = () => {
-    // Navigate to scheduler page
     window.location.href = '/scheduler';
   };
 

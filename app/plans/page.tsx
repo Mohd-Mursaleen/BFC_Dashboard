@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoadingCard } from '@/components/ui/loading';
+import { ConfirmModal } from '@/components/ui/modal';
+import { useNotification } from '@/components/ui/notification';
+import { PlanForm } from '@/components/forms/plan-form';
 import { plansApi } from '@/lib/api';
 import type { Plan } from '@/lib/types';
 
@@ -19,10 +22,18 @@ export default function PlansPage() {
 }
 
 function PlansContent() {
+  const { success, error: showError } = useNotification();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showActiveOnly, setShowActiveOnly] = useState(true);
+  
+  // Modal states
+  const [showPlanForm, setShowPlanForm] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingPlan, setDeletingPlan] = useState<Plan | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchPlans();
@@ -39,6 +50,42 @@ function PlansContent() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAddPlan = () => {
+    setEditingPlan(null);
+    setShowPlanForm(true);
+  };
+
+  const handleEditPlan = (plan: Plan) => {
+    setEditingPlan(plan);
+    setShowPlanForm(true);
+  };
+
+  const handleDeletePlan = (plan: Plan) => {
+    setDeletingPlan(plan);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingPlan) return;
+
+    setDeleteLoading(true);
+    try {
+      await plansApi.delete(deletingPlan.id);
+      success('Plan Deleted', `${deletingPlan.plan_name} has been deleted successfully`);
+      fetchPlans();
+      setShowDeleteConfirm(false);
+      setDeletingPlan(null);
+    } catch (err) {
+      showError('Delete Failed', err instanceof Error ? err.message : 'Failed to delete plan');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleFormSuccess = () => {
+    fetchPlans();
   };
 
   const formatCurrency = (amount: number) => {
@@ -90,7 +137,7 @@ function PlansContent() {
             <h2 className="text-2xl font-bold text-gray-900">Membership Plans</h2>
             <p className="text-gray-600">Manage gym membership plans and pricing</p>
           </div>
-          <Button variant="primary">
+          <Button variant="primary" onClick={handleAddPlan}>
             <span>📋</span>
             Add Plan
           </Button>
@@ -193,10 +240,20 @@ function PlansContent() {
 
                   {/* Actions */}
                   <div className="flex gap-2 pt-4">
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleEditPlan(plan)}
+                    >
                       Edit
                     </Button>
-                    <Button variant="danger" size="sm" className="flex-1">
+                    <Button 
+                      variant="danger" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleDeletePlan(plan)}
+                    >
                       Delete
                     </Button>
                   </div>
@@ -217,13 +274,33 @@ function PlansContent() {
                   : 'Get started by creating your first membership plan'
                 }
               </p>
-              <Button variant="primary">
+              <Button variant="primary" onClick={handleAddPlan}>
                 <span>📋</span>
                 Create Plan
               </Button>
             </CardContent>
           </Card>
         )}
+
+        {/* Plan Form Modal */}
+        <PlanForm
+          isOpen={showPlanForm}
+          onClose={() => setShowPlanForm(false)}
+          onSuccess={handleFormSuccess}
+          plan={editingPlan}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmModal
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={confirmDelete}
+          title="Delete Plan"
+          message={`Are you sure you want to delete "${deletingPlan?.plan_name}"? This action cannot be undone and may affect existing subscriptions.`}
+          confirmText="Delete"
+          variant="danger"
+          loading={deleteLoading}
+        />
       </div>
     </Layout>
   );

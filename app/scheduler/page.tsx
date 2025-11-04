@@ -6,6 +6,7 @@ import { Layout } from '@/components/layout/layout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading';
+import { useNotification } from '@/components/ui/notification';
 import { schedulerApi, subscriptionsApi } from '@/lib/api';
 import type { SchedulerStatus, AutoResumeResult } from '@/lib/types';
 
@@ -18,6 +19,7 @@ export default function SchedulerPage() {
 }
 
 function SchedulerContent() {
+  const { success, error: showError } = useNotification();
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,13 +53,16 @@ function SchedulerContent() {
         try {
           const result = await subscriptionsApi.autoResumeExpired();
           setLastResult(result);
-          alert(`Auto-resume completed successfully! ${result.auto_resumed} subscriptions were resumed.`);
+          success(
+            'Auto-Resume Completed', 
+            `${result.auto_resumed} subscriptions were resumed, ${result.checked} checked, ${result.errors} errors`
+          );
         } catch {
-          alert('Auto-resume triggered successfully!');
+          success('Auto-Resume Triggered', 'Auto-resume process has been triggered successfully');
         }
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to trigger auto-resume');
+      showError('Auto-Resume Failed', err instanceof Error ? err.message : 'Failed to trigger auto-resume');
     } finally {
       setTriggerLoading(false);
     }

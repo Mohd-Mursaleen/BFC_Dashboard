@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input, Select } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { LoadingTable } from '@/components/ui/loading';
+import { ConfirmModal } from '@/components/ui/modal';
+import { useNotification } from '@/components/ui/notification';
+import { MemberForm } from '@/components/forms/member-form';
 import { membersApi } from '@/lib/api';
 import type { Member } from '@/lib/types';
 
@@ -20,12 +23,20 @@ export default function MembersPage() {
 }
 
 function MembersContent() {
+  const { success, error: showError } = useNotification();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [genderFilter, setGenderFilter] = useState('all');
+  
+  // Modal states
+  const [showMemberForm, setShowMemberForm] = useState(false);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingMember, setDeletingMember] = useState<Member | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchMembers();
@@ -45,6 +56,42 @@ function MembersContent() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAddMember = () => {
+    setEditingMember(null);
+    setShowMemberForm(true);
+  };
+
+  const handleEditMember = (member: Member) => {
+    setEditingMember(member);
+    setShowMemberForm(true);
+  };
+
+  const handleDeleteMember = (member: Member) => {
+    setDeletingMember(member);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingMember) return;
+
+    setDeleteLoading(true);
+    try {
+      await membersApi.delete(deletingMember.id);
+      success('Member Deleted', `${deletingMember.full_name} has been deleted successfully`);
+      fetchMembers();
+      setShowDeleteConfirm(false);
+      setDeletingMember(null);
+    } catch (err) {
+      showError('Delete Failed', err instanceof Error ? err.message : 'Failed to delete member');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleFormSuccess = () => {
+    fetchMembers();
   };
 
   const filteredMembers = members.filter(member => {
@@ -114,7 +161,7 @@ function MembersContent() {
             <h2 className="text-2xl font-bold text-gray-900">Members</h2>
             <p className="text-gray-600">Manage gym members and their information</p>
           </div>
-          <Button variant="primary">
+          <Button variant="primary" onClick={handleAddMember}>
             <span>👤</span>
             Add Member
           </Button>
@@ -192,7 +239,7 @@ function MembersContent() {
                         Joined
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
+                        View Details
                       </th>
                     </tr>
                   </thead>
@@ -201,9 +248,12 @@ function MembersContent() {
                       <tr key={member.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <button
+                              onClick={() => window.location.href = `/members/${member.id}`}
+                              className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                            >
                               {member.full_name}
-                            </div>
+                            </button>
                             <div className="text-sm text-gray-500">
                               {member.gender === 'male' ? '👨' : member.gender === 'female' ? '👩' : '👤'} 
                               {' '}{calculateAge(member.date_of_birth)} years
@@ -224,7 +274,7 @@ function MembersContent() {
                           </div>
                           <div className="text-sm text-gray-500">
                             {member.preferred_gym_slot && (
-                              <span className="capitalize">{member.preferred_gym_slot}</span>
+                              <span>{member.preferred_gym_slot}</span>
                             )}
                           </div>
                         </td>
@@ -237,14 +287,15 @@ function MembersContent() {
                           {formatDate(member.created_at)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
-                              Edit
-                            </Button>
-                            <Button variant="danger" size="sm">
-                              Delete
-                            </Button>
-                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => window.location.href = `/members/${member.id}`}
+                            className="flex items-center gap-2"
+                          >
+                            <span>👁️</span>
+                            View Details
+                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -267,6 +318,26 @@ function MembersContent() {
             </CardContent>
           </Card>
         )}
+
+        {/* Member Form Modal */}
+        <MemberForm
+          isOpen={showMemberForm}
+          onClose={() => setShowMemberForm(false)}
+          onSuccess={handleFormSuccess}
+          member={editingMember}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmModal
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={confirmDelete}
+          title="Delete Member"
+          message={`Are you sure you want to delete ${deletingMember?.full_name}? This action cannot be undone.`}
+          confirmText="Delete"
+          variant="danger"
+          loading={deleteLoading}
+        />
       </div>
     </Layout>
   );

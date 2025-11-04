@@ -10,9 +10,21 @@ export interface Member {
   height?: number;
   weight?: number;
   address?: string;
-  medical_history?: any;
+  medical_history?: {
+    diabetic?: boolean;
+    thyroid?: boolean;
+    heart_stroke?: boolean;
+    high_blood_pressure?: boolean;
+    low_blood_pressure?: boolean;
+    breathing_difficulty?: boolean;
+    back_pain?: boolean;
+    joint_problem?: boolean;
+    recent_surgery?: boolean;
+    prescribed_medication?: boolean;
+    other_condition?: boolean;
+  } | null;
   status: 'active' | 'inactive' | 'suspended';
-  preferred_gym_slot?: 'morning' | 'afternoon' | 'evening';
+  preferred_gym_slot?: '5:30am-7:30am' | '7:30am-9:30am' | '9:30am-11:30am' | '4:00pm-6:00pm' | '6:00pm-8:00pm' | '8:00pm-10:00pm';
   created_at: string;
   updated_at: string;
 }
@@ -48,6 +60,8 @@ export interface Subscription {
   receipt_number: string;
   created_at: string;
   updated_at: string;
+  member_name?: string;
+  plan_name?: string;
 }
 
 export interface DashboardCard {
