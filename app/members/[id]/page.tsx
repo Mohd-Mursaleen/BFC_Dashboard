@@ -379,14 +379,14 @@ function MemberDetailContent() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
+                          {/* <div className="flex items-center gap-3 mb-2">
                             <Badge variant={getSubscriptionStatusBadgeVariant(subscription)}>
                               {getSubscriptionStatusText(subscription)}
                             </Badge>
                             <span className="text-sm font-medium text-gray-900">
                               Receipt: {subscription.receipt_number}
                             </span>
-                          </div>
+                          </div> */}
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
                               <span className="text-gray-500">Duration:</span>

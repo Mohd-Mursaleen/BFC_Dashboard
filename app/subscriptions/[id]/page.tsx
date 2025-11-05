@@ -167,7 +167,17 @@ function SubscriptionDetailContent() {
   const calculateProgress = (subscription: Subscription) => {
     const used = subscription.pause_days_used;
     const total = subscription.total_pause_days_allowed;
-    return total > 0 ? (used / total) * 100 : 0;
+    const progress = total > 0 ? (used / total) * 100 : 0;
+    
+    // Debug logging to check if data is correct
+    console.log('Progress calculation:', {
+      used,
+      total,
+      progress,
+      subscription_id: subscription.id
+    });
+    
+    return progress;
   };
 
   if (loading) {
@@ -390,7 +400,10 @@ function SubscriptionDetailContent() {
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div 
                     className="bg-orange-500 h-3 rounded-full transition-all duration-300"
-                    style={{ width: `${calculateProgress(subscription)}%` }}
+                    style={{ 
+                      width: `${Math.max(calculateProgress(subscription), subscription.pause_days_used > 0 ? 5 : 0)}%`,
+                      minWidth: subscription.pause_days_used > 0 ? '8px' : '0px'
+                    }}
                   />
                 </div>
                 <div className="flex justify-between items-center">
