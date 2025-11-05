@@ -29,7 +29,7 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
     start_date: new Date().toISOString().split('T')[0],
     end_date: '',
     amount_paid: '',
-    payment_mode: 'cash' as const,
+    payment_mode: 'cash' as 'cash' | 'upi' | 'card' | 'bank_transfer' | 'cheque',
     receipt_number: '',
   });
 
@@ -55,7 +55,7 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
         start_date: new Date().toISOString().split('T')[0],
         end_date: '',
         amount_paid: '',
-        payment_mode: 'cash',
+        payment_mode: 'cash' as 'cash' | 'upi' | 'card' | 'bank_transfer' | 'cheque',
         receipt_number: '',
       });
     }
@@ -201,7 +201,7 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
           start_date: new Date().toISOString().split('T')[0],
           end_date: '',
           amount_paid: '',
-          payment_mode: 'cash',
+          payment_mode: 'cash' as 'cash' | 'upi' | 'card' | 'bank_transfer' | 'cheque',
           receipt_number: '',
         });
       }
