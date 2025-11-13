@@ -11,6 +11,7 @@ import { LoadingTable } from '@/components/ui/loading';
 import { useNotification } from '@/components/ui/notification';
 import { SubscriptionForm } from '@/components/forms/subscription-form';
 import { subscriptionsApi } from '@/lib/api';
+import { formatDate as formatDateUtil } from '@/lib/utils';
 import type { Subscription } from '@/lib/types';
 
 export default function SubscriptionsPage() {
@@ -89,10 +90,6 @@ function SubscriptionsContent() {
     if (endDate < today) return 'Expired';
     if (subscription.is_currently_paused) return 'Paused';
     return 'Active';
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
   };
 
   const formatCurrency = (amount: number) => {
@@ -237,10 +234,10 @@ function SubscriptionsContent() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {formatDate(subscription.start_date)}
+                            {formatDateUtil(subscription.start_date)}
                           </div>
                           <div className="text-sm text-gray-500">
-                            to {formatDate(subscription.actual_end_date || subscription.end_date)}
+                            to {formatDateUtil(subscription.actual_end_date || subscription.end_date)}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -273,7 +270,7 @@ function SubscriptionsContent() {
                           </Badge>
                           {subscription.is_currently_paused && subscription.current_pause_start_date && (
                             <div className="text-xs text-gray-500 mt-1">
-                              Since {formatDate(subscription.current_pause_start_date)}
+                              Since {formatDateUtil(subscription.current_pause_start_date)}
                             </div>
                           )}
                         </td>

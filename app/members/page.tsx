@@ -12,6 +12,7 @@ import { ConfirmModal } from '@/components/ui/modal';
 import { useNotification } from '@/components/ui/notification';
 import { MemberForm } from '@/components/forms/member-form';
 import { membersApi } from '@/lib/api';
+import { formatDate, calculateAge } from '@/lib/utils';
 import type { Member } from '@/lib/types';
 
 export default function MembersPage() {
@@ -110,23 +111,6 @@ function MembersContent() {
       case 'suspended': return 'danger';
       default: return 'info';
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const calculateAge = (dateOfBirth: string) => {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age;
   };
 
   if (error) {

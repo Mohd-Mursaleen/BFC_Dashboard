@@ -13,6 +13,7 @@ import { useNotification } from '@/components/ui/notification';
 import { MemberForm } from '@/components/forms/member-form';
 import { SubscriptionForm } from '@/components/forms/subscription-form';
 import { membersApi, subscriptionsApi } from '@/lib/api';
+import { formatDate, calculateAge, isSubscriptionActive, isSubscriptionExpired } from '@/lib/utils';
 import type { Member, Subscription } from '@/lib/types';
 
 export default function MemberDetailPage() {
@@ -110,40 +111,10 @@ function MemberDetailContent() {
     fetchMemberSubscriptions();
   };
 
-  const getSubscriptionStatusBadgeVariant = (subscription: Subscription) => {
-    const today = new Date().toISOString().split('T')[0];
-    const endDate = subscription.actual_end_date || subscription.end_date;
-    
-    if (endDate < today) return 'danger';
-    if (subscription.is_currently_paused) return 'warning';
-    return 'active';
-  };
-
-  const getSubscriptionStatusText = (subscription: Subscription) => {
-    const today = new Date().toISOString().split('T')[0];
-    const endDate = subscription.actual_end_date || subscription.end_date;
-    
-    if (endDate < today) return 'Expired';
-    if (subscription.is_currently_paused) return 'Paused';
-    return 'Active';
-  };
-
-  const calculateAge = (dateOfBirth: string) => {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
+  // Check subscription status
+  const hasActiveSubscription = memberSubscriptions.some(sub => isSubscriptionActive(sub));
+  const activeSubscription = memberSubscriptions.find(sub => isSubscriptionActive(sub));
+  const hasAnySubscription = memberSubscriptions.length > 0;
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -151,6 +122,12 @@ function MemberDetailContent() {
       case 'inactive': return 'inactive';
       case 'suspended': return 'danger';
       default: return 'info';
+    }
+  };
+
+  const handleExpireSubscription = () => {
+    if (activeSubscription) {
+      router.push(`/subscriptions/${activeSubscription.id}`);
     }
   };
 
@@ -213,10 +190,17 @@ function MemberDetailContent() {
             </div>
           </div>
           <div className="flex gap-3">
-            <Button variant="success" onClick={handleAddSubscription}>
-              <span>📝</span>
-              Add Subscription
-            </Button>
+            {hasActiveSubscription ? (
+              <Button variant="danger" onClick={handleExpireSubscription}>
+                <span>⏰</span>
+                Expire Subscription
+              </Button>
+            ) : (
+              <Button variant="success" onClick={handleAddSubscription}>
+                <span>📝</span>
+                Add Subscription
+              </Button>
+            )}
             <Button variant="primary" onClick={handleEdit}>
               <span>✏️</span>
               Edit Member
@@ -359,10 +343,12 @@ function MemberDetailContent() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Subscriptions ({memberSubscriptions.length})</h3>
-                <Button variant="success" size="sm" onClick={handleAddSubscription}>
-                  <span>📝</span>
-                  Add Subscription
-                </Button>
+                {!hasActiveSubscription && (
+                  <Button variant="success" size="sm" onClick={handleAddSubscription}>
+                    <span>📝</span>
+                    Add Subscription
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>

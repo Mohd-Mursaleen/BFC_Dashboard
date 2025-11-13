@@ -11,6 +11,7 @@ import { ConfirmModal } from '@/components/ui/modal';
 import { useNotification } from '@/components/ui/notification';
 import { PlanForm } from '@/components/forms/plan-form';
 import { plansApi } from '@/lib/api';
+import { formatCurrency } from '@/lib/utils';
 import type { Plan } from '@/lib/types';
 
 export default function PlansPage() {

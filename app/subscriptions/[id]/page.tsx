@@ -13,6 +13,7 @@ import { useNotification } from '@/components/ui/notification';
 import { SubscriptionForm } from '@/components/forms/subscription-form';
 import { PauseReasonModal } from '@/components/forms/pause-reason-modal';
 import { subscriptionsApi, membersApi, plansApi } from '@/lib/api';
+import { formatDate as formatDateUtil } from '@/lib/utils';
 import type { Subscription, Member, Plan } from '@/lib/types';
 
 export default function SubscriptionDetailPage() {
@@ -138,10 +139,6 @@ function SubscriptionDetailContent() {
     fetchSubscriptionDetails();
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
   const formatCurrency = (amount: number) => {
     return `₹${amount.toLocaleString()}`;
   };
@@ -259,7 +256,7 @@ function SubscriptionDetailContent() {
                 </Badge>
                 {subscription.is_currently_paused && subscription.current_pause_start_date && (
                   <span className="text-sm text-gray-600">
-                    Paused since {formatDate(subscription.current_pause_start_date)}
+                    Paused since {formatDateUtil(subscription.current_pause_start_date)}
                   </span>
                 )}
               </div>
@@ -369,16 +366,16 @@ function SubscriptionDetailContent() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Start Date</label>
-                  <p className="text-sm text-gray-900">{formatDate(subscription.start_date)}</p>
+                  <p className="text-sm text-gray-900">{formatDateUtil(subscription.start_date)}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Original End Date</label>
-                  <p className="text-sm text-gray-900">{formatDate(subscription.end_date)}</p>
+                  <p className="text-sm text-gray-900">{formatDateUtil(subscription.end_date)}</p>
                 </div>
                 {subscription.actual_end_date && (
                   <div className="col-span-2">
                     <label className="text-sm font-medium text-gray-500">Actual End Date</label>
-                    <p className="text-sm font-medium text-gray-900">{formatDate(subscription.actual_end_date)}</p>
+                    <p className="text-sm font-medium text-gray-900">{formatDateUtil(subscription.actual_end_date)}</p>
                     <p className="text-xs text-gray-500">Extended due to pause days used</p>
                   </div>
                 )}
@@ -435,7 +432,7 @@ function SubscriptionDetailContent() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Created On</label>
-                  <p className="text-sm text-gray-900">{formatDate(subscription.created_at)}</p>
+                  <p className="text-sm text-gray-900">{formatDateUtil(subscription.created_at)}</p>
                 </div>
               </div>
             </CardContent>
