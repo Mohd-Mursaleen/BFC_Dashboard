@@ -156,3 +156,49 @@ export interface AutoResumeResult {
   errors: number;
   timestamp: string;
 }
+
+// WhatsApp API Types
+export interface WhatsAppTestResponse {
+  test_phone: string;
+  connection_status: 'success' | 'failed';
+  details: {
+    success: boolean;
+    message_id?: string;
+    error?: string;
+    status_code?: number;
+    response?: any;
+  };
+}
+
+export interface WhatsAppMessageResponse {
+  success: boolean;
+  message_id?: string;
+  error?: string;
+  status_code?: number;
+  response?: any;
+}
+
+export interface ExpiringSubscription {
+  subscription_id: string;
+  member_id: string;
+  member_name: string;
+  member_phone: string;
+  end_date: string;
+  days_remaining: number;
+}
+
+export interface ExpiringSubscriptionsResponse {
+  days_ahead: number;
+  count: number;
+  subscriptions: ExpiringSubscription[];
+}
+
+export interface ExpiryRemindersResponse {
+  success: boolean;
+  checked_date: string;
+  target_expiry_date: string;
+  total_active_subscriptions: number;
+  expiring_in_7_days: number;
+  notifications_sent: number;
+  notifications_failed: number;
+}

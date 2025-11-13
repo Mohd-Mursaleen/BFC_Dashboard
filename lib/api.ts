@@ -132,4 +132,22 @@ export const analyticsApi = {
 export const schedulerApi = {
   getStatus: () => apiCall('/scheduler/status'),
   triggerAutoResume: () => apiCall('/scheduler/auto-resume', { method: 'POST' }),
+  triggerExpiryReminders: () => apiCall('/scheduler/expiry-reminders', { method: 'POST' }),
+};
+
+// WhatsApp API
+export const whatsappApi = {
+  test: (testPhone?: string) => {
+    const query = testPhone ? `?test_phone=${testPhone}` : '';
+    return apiCall(`/whatsapp/test${query}`);
+  },
+  sendTemplate: (data: { to_phone: string; template_name: string; language_code?: string }) => 
+    apiCall('/whatsapp/send-template', { method: 'POST', body: JSON.stringify(data) }),
+  sendWelcome: (data: { member_phone: string; member_name: string }) => 
+    apiCall('/whatsapp/send-welcome', { method: 'POST', body: JSON.stringify(data) }),
+  getExpiringSubscriptions: (days?: number) => {
+    const query = days ? `?days=${days}` : '';
+    return apiCall(`/whatsapp/expiring-subscriptions${query}`);
+  },
+  sendExpiryReminders: () => apiCall('/whatsapp/send-expiry-reminders', { method: 'POST' }),
 };
