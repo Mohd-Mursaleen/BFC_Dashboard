@@ -59,7 +59,7 @@ export const authApi = {
     formData.append('username', username);
     formData.append('password', password);
 
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
       body: formData,
     });
@@ -77,59 +77,77 @@ export const authApi = {
 export const membersApi = {
   getAll: (params?: Record<string, string>) => {
     const query = params ? `?${new URLSearchParams(params)}` : '';
-    return apiCall(`/members/${query}`);
+    return apiCall(`/api/members/${query}`);
   },
-  getById: (id: string) => apiCall(`/members/${id}`),
-  create: (data: any) => apiCall('/members/', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: any) => apiCall(`/members/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id: string) => apiCall(`/members/${id}`, { method: 'DELETE' }),
+  getById: (id: string) => apiCall(`/api/members/${id}`),
+  create: (data: any) => apiCall('/api/members/', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: any) => apiCall(`/api/members/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: string) => apiCall(`/api/members/${id}`, { method: 'DELETE' }),
 };
 
 // Plans API
 export const plansApi = {
   getAll: (params?: Record<string, string>) => {
     const query = params ? `?${new URLSearchParams(params)}` : '';
-    return apiCall(`/plans/${query}`);
+    return apiCall(`/api/plans/${query}`);
   },
-  getActive: () => apiCall('/plans/active'),
-  getById: (id: string) => apiCall(`/plans/${id}`),
-  create: (data: any) => apiCall('/plans/', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: any) => apiCall(`/plans/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id: string) => apiCall(`/plans/${id}`, { method: 'DELETE' }),
+  getActive: () => apiCall('/api/plans/active'),
+  getById: (id: string) => apiCall(`/api/plans/${id}`),
+  create: (data: any) => apiCall('/api/plans/', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: any) => apiCall(`/api/plans/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: string) => apiCall(`/api/plans/${id}`, { method: 'DELETE' }),
 };
 
 // Subscriptions API
 export const subscriptionsApi = {
-  getAll: () => apiCall('/subscriptions/'),
-  getById: (id: string) => apiCall(`/subscriptions/${id}`),
-  getPauseInfo: (id: string) => apiCall(`/subscriptions/${id}/pause-info`),
-  create: (data: any) => apiCall('/subscriptions/', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: any) => apiCall(`/subscriptions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id: string) => apiCall(`/subscriptions/${id}`, { method: 'DELETE' }),
+  getAll: () => apiCall('/api/subscriptions/'),
+  getById: (id: string) => apiCall(`/api/subscriptions/${id}`),
+  getPauseInfo: (id: string) => apiCall(`/api/subscriptions/${id}/pause-info`),
+  create: (data: any) => apiCall('/api/subscriptions/', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: any) => apiCall(`/api/subscriptions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: string) => apiCall(`/api/subscriptions/${id}`, { method: 'DELETE' }),
   pause: (id: string, reason?: string) => 
-    apiCall(`/subscriptions/${id}/pause`, { 
+    apiCall(`/api/subscriptions/${id}/pause`, { 
       method: 'POST', 
       body: JSON.stringify({ reason: reason || 'No reason provided' }) 
     }),
-  resume: (id: string) => apiCall(`/subscriptions/${id}/resume`, { method: 'POST' }),
-  autoResumeExpired: () => apiCall('/subscriptions/auto-resume-expired', { method: 'POST' }),
+  resume: (id: string) => apiCall(`/api/subscriptions/${id}/resume`, { method: 'POST' }),
+  autoResumeExpired: () => apiCall('/api/subscriptions/auto-resume-expired', { method: 'POST' }),
 };
 
 // Analytics API
 export const analyticsApi = {
-  getSummary: () => apiCall('/analytics/summary'),
-  getDashboard: () => apiCall('/analytics/dashboard'),
-  getMembers: () => apiCall('/analytics/members'),
-  getPlans: () => apiCall('/analytics/plans'),
-  getRevenue: () => apiCall('/analytics/revenue'),
+  getSummary: () => apiCall('/api/analytics/summary'),
+  getDashboard: () => apiCall('/api/analytics/dashboard'),
+  getMembers: () => apiCall('/api/analytics/members'),
+  getPlans: () => apiCall('/api/analytics/plans'),
+  getRevenue: () => apiCall('/api/analytics/revenue'),
   getFiltered: (params: Record<string, string>) => {
     const query = new URLSearchParams(params);
-    return apiCall(`/analytics/filtered?${query}`);
+    return apiCall(`/api/analytics/filtered?${query}`);
   },
 };
 
 // Scheduler API
 export const schedulerApi = {
-  getStatus: () => apiCall('/scheduler/status'),
-  triggerAutoResume: () => apiCall('/scheduler/auto-resume', { method: 'POST' }),
+  getStatus: () => apiCall('/api/scheduler/status'),
+  triggerAutoResume: () => apiCall('/api/scheduler/auto-resume', { method: 'POST' }),
+  triggerExpiryReminders: () => apiCall('/api/scheduler/expiry-reminders', { method: 'POST' }),
+};
+
+// WhatsApp API
+export const whatsappApi = {
+  test: (testPhone?: string) => {
+    const query = testPhone ? `?test_phone=${testPhone}` : '';
+    return apiCall(`/api/whatsapp/test${query}`);
+  },
+  sendTemplate: (data: { to_phone: string; template_name: string; language_code?: string }) => 
+    apiCall('/api/whatsapp/send-template', { method: 'POST', body: JSON.stringify(data) }),
+  sendWelcome: (data: { member_phone: string; member_name: string }) => 
+    apiCall('/api/whatsapp/send-welcome', { method: 'POST', body: JSON.stringify(data) }),
+  getExpiringSubscriptions: (days?: number) => {
+    const query = days ? `?days=${days}` : '';
+    return apiCall(`/api/whatsapp/expiring-subscriptions${query}`);
+  },
+  sendExpiryReminders: () => apiCall('/api/whatsapp/send-expiry-reminders', { method: 'POST' }),
 };

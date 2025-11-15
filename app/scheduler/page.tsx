@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { useNotification } from '@/components/ui/notification';
-import { schedulerApi, subscriptionsApi } from '@/lib/api';
-import type { SchedulerStatus, AutoResumeResult } from '@/lib/types';
+import { schedulerApi, subscriptionsApi, whatsappApi } from '@/lib/api';
+import type { SchedulerStatus, AutoResumeResult, WhatsAppTestResponse, ExpiringSubscriptionsResponse, ExpiryRemindersResponse } from '@/lib/types';
 
 export default function SchedulerPage() {
   return (
@@ -25,9 +25,19 @@ function SchedulerContent() {
   const [error, setError] = useState<string | null>(null);
   const [triggerLoading, setTriggerLoading] = useState(false);
   const [lastResult, setLastResult] = useState<AutoResumeResult | null>(null);
+  
+  // WhatsApp states
+  const [testPhone, setTestPhone] = useState('918218134534');
+  const [testResult, setTestResult] = useState<WhatsAppTestResponse | null>(null);
+  const [testLoading, setTestLoading] = useState(false);
+  const [expiringData, setExpiringData] = useState<ExpiringSubscriptionsResponse | null>(null);
+  const [expiringLoading, setExpiringLoading] = useState(false);
+  const [reminderLoading, setReminderLoading] = useState(false);
+  const [reminderResult, setReminderResult] = useState<ExpiryRemindersResponse | null>(null);
 
   useEffect(() => {
     fetchSchedulerStatus();
+    fetchExpiringSubscriptions();
   }, []);
 
   const fetchSchedulerStatus = async () => {
@@ -65,6 +75,81 @@ function SchedulerContent() {
       showError('Auto-Resume Failed', err instanceof Error ? err.message : 'Failed to trigger auto-resume');
     } finally {
       setTriggerLoading(false);
+    }
+  };
+
+  // WhatsApp functions
+  const testWhatsAppConnection = async () => {
+    try {
+      setTestLoading(true);
+      const response = await whatsappApi.test(testPhone);
+      setTestResult(response);
+      
+      if (response.connection_status === 'success') {
+        success('WhatsApp Test Successful', 'Test message sent successfully!');
+      } else {
+        showError('WhatsApp Test Failed', response.details.error || 'Failed to send test message');
+      }
+    } catch (err) {
+      showError('WhatsApp Test Failed', err instanceof Error ? err.message : 'Failed to test WhatsApp connection');
+      setTestResult({
+        test_phone: testPhone,
+        connection_status: 'failed',
+        details: {
+          success: false,
+          error: err instanceof Error ? err.message : 'Unknown error'
+        }
+      });
+    } finally {
+      setTestLoading(false);
+    }
+  };
+
+  const fetchExpiringSubscriptions = async () => {
+    try {
+      setExpiringLoading(true);
+      const response = await whatsappApi.getExpiringSubscriptions(7);
+      setExpiringData(response);
+    } catch (err) {
+      console.error('Failed to fetch expiring subscriptions:', err);
+    } finally {
+      setExpiringLoading(false);
+    }
+  };
+
+  const sendExpiryReminders = async () => {
+    try {
+      setReminderLoading(true);
+      const response = await whatsappApi.sendExpiryReminders();
+      setReminderResult(response);
+      
+      if (response.success) {
+        success(
+          'Reminders Sent',
+          `${response.notifications_sent} reminders sent successfully${response.notifications_failed > 0 ? `, ${response.notifications_failed} failed` : ''}`
+        );
+        fetchExpiringSubscriptions(); // Refresh the list
+      }
+    } catch (err) {
+      showError('Failed to Send Reminders', err instanceof Error ? err.message : 'Failed to send expiry reminders');
+    } finally {
+      setReminderLoading(false);
+    }
+  };
+
+  const triggerExpiryReminders = async () => {
+    try {
+      setReminderLoading(true);
+      const response = await schedulerApi.triggerExpiryReminders();
+      
+      if (response.success) {
+        success('Reminder Job Triggered', 'Expiry reminder check executed successfully');
+        fetchExpiringSubscriptions(); // Refresh the list
+      }
+    } catch (err) {
+      showError('Failed to Trigger Reminders', err instanceof Error ? err.message : 'Failed to trigger expiry reminders');
+    } finally {
+      setReminderLoading(false);
     }
   };
 
@@ -276,6 +361,212 @@ function SchedulerContent() {
             </CardContent>
           </Card>
         )}
+
+        {/* WhatsApp Integration Section */}
+        <div className="border-t-4 border-green-500 pt-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">📱 WhatsApp Integration</h2>
+          <p className="text-gray-600 mb-6">Test WhatsApp connection and manage expiry reminders</p>
+
+          {/* WhatsApp Test */}
+          <Card className="mb-6">
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Test WhatsApp Connection</h3>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Test Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    value={testPhone}
+                    onChange={(e) => setTestPhone(e.target.value)}
+                    placeholder="918218134535"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Format: 918218134534 (country code + number)</p>
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    variant="primary"
+                    onClick={testWhatsAppConnection}
+                    loading={testLoading}
+                    disabled={testLoading || !testPhone}
+                  >
+                    {testLoading ? 'Testing...' : '📱 Test Connection'}
+                  </Button>
+                </div>
+              </div>
+
+              {testResult && (
+                <div className={`p-4 rounded-lg ${
+                  testResult.connection_status === 'success' 
+                    ? 'bg-green-50 border border-green-200' 
+                    : 'bg-red-50 border border-red-200'
+                }`}>
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">
+                      {testResult.connection_status === 'success' ? '✅' : '❌'}
+                    </span>
+                    <div className="flex-1">
+                      <h4 className={`font-semibold ${
+                        testResult.connection_status === 'success' ? 'text-green-900' : 'text-red-900'
+                      }`}>
+                        {testResult.connection_status === 'success' ? 'Success!' : 'Failed'}
+                      </h4>
+                      {testResult.connection_status === 'success' ? (
+                        <div className="text-sm text-green-800 mt-1">
+                          <p>Test message sent successfully to {testResult.test_phone}</p>
+                          {testResult.details.message_id && (
+                            <p className="text-xs mt-1 font-mono">Message ID: {testResult.details.message_id}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-red-800 mt-1">
+                          <p>Failed to send test message</p>
+                          <p className="text-xs mt-1">{testResult.details.error}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Expiring Subscriptions */}
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">⏰ Expiring Subscriptions (Next 7 Days)</h3>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={fetchExpiringSubscriptions}>
+                    🔄 Refresh
+                  </Button>
+                  <Button 
+                    variant="success" 
+                    size="sm" 
+                    onClick={sendExpiryReminders}
+                    loading={reminderLoading}
+                    disabled={reminderLoading || !expiringData || expiringData.count === 0}
+                  >
+                    📱 Send Reminders Now
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {expiringLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingSpinner />
+                </div>
+              ) : expiringData ? (
+                <div className="space-y-4">
+                  <div className="bg-orange-50 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-2xl font-bold text-orange-600">{expiringData.count}</div>
+                        <div className="text-sm text-orange-700">Subscriptions expiring soon</div>
+                      </div>
+                      <div className="text-4xl">⏰</div>
+                    </div>
+                  </div>
+
+                  {expiringData.count > 0 ? (
+                    <div className="space-y-2">
+                      {expiringData.subscriptions.map((sub) => (
+                        <div key={sub.subscription_id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900">{sub.member_name}</div>
+                              <div className="text-sm text-gray-600">📱 {sub.member_phone}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-medium text-orange-600">
+                                {sub.days_remaining} days remaining
+                              </div>
+                              <div className="text-xs text-gray-500">Expires: {sub.end_date}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="text-4xl mb-2">✅</div>
+                      <p className="text-gray-600">No subscriptions expiring in the next 7 days</p>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
+              {reminderResult && (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-semibold text-blue-900 mb-2">Last Reminder Run</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <div className="text-blue-600">Checked Date</div>
+                      <div className="font-medium">{reminderResult.checked_date}</div>
+                    </div>
+                    <div>
+                      <div className="text-blue-600">Expiring</div>
+                      <div className="font-medium">{reminderResult.expiring_in_7_days}</div>
+                    </div>
+                    <div>
+                      <div className="text-green-600">Sent</div>
+                      <div className="font-medium">{reminderResult.notifications_sent}</div>
+                    </div>
+                    <div>
+                      <div className="text-red-600">Failed</div>
+                      <div className="font-medium">{reminderResult.notifications_failed}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* WhatsApp Info */}
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">📱 WhatsApp Notifications</h3>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">🔔 Automatic Notifications</h4>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li>• <strong>Welcome Message:</strong> Sent when new member is created</li>
+                    <li>• <strong>Subscription Confirmation:</strong> Sent when subscription is created</li>
+                    <li>• <strong>Expiry Reminder:</strong> Sent daily at 10:00 AM IST for subscriptions expiring in 7 days</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">📋 Manual Actions</h4>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li>• Test WhatsApp connection with any phone number</li>
+                    <li>• View upcoming expiring subscriptions</li>
+                    <li>• Manually trigger expiry reminders</li>
+                    <li>• Send welcome messages from member profiles</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-blue-500 text-xl">💡</span>
+                  <div>
+                    <h4 className="font-semibold text-blue-900">Phone Number Format</h4>
+                    <p className="text-sm text-blue-800">
+                      Use format: <code className="bg-blue-100 px-2 py-1 rounded">918218134534</code> (country code + number without spaces or special characters)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </Layout>
   );

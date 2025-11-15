@@ -5,6 +5,7 @@ import { Layout } from '@/components/layout/layout';
 import { DashboardCard } from '@/components/dashboard/dashboard-card';
 import { QuickStats } from '@/components/dashboard/quick-stats';
 import { QuickActions } from '@/components/dashboard/quick-actions';
+import { ExpiringMembersWidget } from '@/components/dashboard/expiring-members-widget';
 import { LoadingCard } from '@/components/ui/loading';
 import { analyticsApi } from '@/lib/api';
 import type { DashboardSummary } from '@/lib/types';
@@ -115,10 +116,11 @@ export default function DashboardPage() {
           ) : null}
         </div>
 
-        {/* Quick Stats and Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Quick Stats, Actions, and WhatsApp Widget */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {loading ? (
             <>
+              <LoadingCard />
               <LoadingCard />
               <LoadingCard />
             </>
@@ -131,6 +133,7 @@ export default function DashboardPage() {
                 onViewReports={handleViewReports}
                 onManageScheduler={handleManageScheduler}
               />
+              <ExpiringMembersWidget />
             </>
           ) : null}
         </div>
