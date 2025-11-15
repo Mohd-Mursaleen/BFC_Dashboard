@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
+import Image from 'next/image';
 interface NavigationProps {
   isMobile?: boolean;
   onItemClick?: () => void;
@@ -53,8 +53,8 @@ export function Navigation({ isMobile = false, onItemClick }: NavigationProps) {
     <nav className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 md:bg-gray-900">
       <div className="flex flex-col flex-1 min-h-0">
         <div className="flex items-center h-16 flex-shrink-0 px-4 bg-gray-900">
-          <span className="text-2xl">🏋️</span>
-          <span className="ml-2 text-white font-semibold">Gym Manager</span>
+        <Image src="/assets/logo.jpeg" alt="Gym Manager Logo" className="h-8 w-8" width={32} height={32} />
+        <span className="ml-2 text-white font-semibold">Bengaluru Fitness Club</span>
         </div>
         
         <div className="flex-1 flex flex-col overflow-y-auto">
