@@ -61,6 +61,7 @@ export interface Subscription {
   created_at: string;
   updated_at: string;
   member_name?: string;
+  member_phone?: string;
   plan_name?: string;
 }
 
@@ -201,4 +202,48 @@ export interface ExpiryRemindersResponse {
   expiring_in_7_days: number;
   notifications_sent: number;
   notifications_failed: number;
+}
+
+
+// WhatsApp Template Types
+export interface WhatsAppTemplate {
+  name: string;
+  language: string;
+  status: 'APPROVED' | 'PENDING' | 'REJECTED';
+  category: string;
+  components?: Array<{
+    type: string;
+    text?: string;
+  }>;
+}
+
+export interface WhatsAppTemplatesResponse {
+  success: boolean;
+  count: number;
+  templates: WhatsAppTemplate[];
+}
+
+export interface BulkSendRecipient {
+  phone: string;
+  parameters: Record<string, string>;
+}
+
+export interface BulkSendRequest {
+  template_name: string;
+  language_code: string;
+  recipients: BulkSendRecipient[];
+}
+
+export interface BulkSendResultItem {
+  phone: string;
+  success: boolean;
+  message_id?: string;
+  error?: string;
+}
+
+export interface BulkSendResult {
+  total: number;
+  successful: number;
+  failed: number;
+  results: BulkSendResultItem[];
 }

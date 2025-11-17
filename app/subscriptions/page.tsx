@@ -28,6 +28,7 @@ function SubscriptionsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   
   // Modal states
@@ -62,16 +63,35 @@ function SubscriptionsContent() {
     const today = new Date().toISOString().split('T')[0];
     const endDate = subscription.actual_end_date || subscription.end_date;
     
+    // Status filter
+    let statusMatch = true;
     switch (filter) {
       case 'active':
-        return subscription.status === 'active' && !subscription.is_currently_paused && endDate >= today;
+        statusMatch = subscription.status === 'active' && !subscription.is_currently_paused && endDate >= today;
+        break;
       case 'paused':
-        return subscription.is_currently_paused;
+        statusMatch = subscription.is_currently_paused;
+        break;
       case 'expired':
-        return endDate < today;
+        statusMatch = endDate < today;
+        break;
       default:
-        return true;
+        statusMatch = true;
     }
+    
+    // Search filter
+    let searchMatch = true;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      searchMatch = 
+        subscription.member_name?.toLowerCase().includes(query) ||
+        subscription.member_phone?.toLowerCase().includes(query) ||
+        subscription.receipt_number?.toLowerCase().includes(query) ||
+        subscription.plan_name?.toLowerCase().includes(query) ||
+        subscription.member_id?.toLowerCase().includes(query);
+    }
+    
+    return statusMatch && searchMatch;
   });
 
   const getStatusBadgeVariant = (subscription: Subscription) => {
@@ -149,24 +169,56 @@ function SubscriptionsContent() {
           </Button>
         </div>
 
-        {/* Filters */}
+        {/* Search and Filters */}
         <Card>
           <CardContent className="py-4">
-            <div className="flex items-center gap-4">
-              <Select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                options={[
-                  { value: 'all', label: 'All Subscriptions' },
-                  { value: 'active', label: 'Active Only' },
-                  { value: 'paused', label: 'Paused Only' },
-                  { value: 'expired', label: 'Expired Only' },
-                ]}
-              />
-              <Button variant="outline" size="sm" onClick={fetchSubscriptions}>
-                🔄 Refresh
-              </Button>
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search Input */}
+              <div className="flex-1">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by member name, phone, receipt number, or plan..."
+                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Status Filter */}
+              <div className="flex items-center gap-2">
+                <Select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  options={[
+                    { value: 'all', label: 'All Subscriptions' },
+                    { value: 'active', label: 'Active Only' },
+                    { value: 'paused', label: 'Paused Only' },
+                    { value: 'expired', label: 'Expired Only' },
+                  ]}
+                />
+                <Button variant="outline" size="sm" onClick={fetchSubscriptions}>
+                  🔄 Refresh
+                </Button>
+              </div>
             </div>
+            
+            {/* Search Results Info */}
+            {searchQuery && (
+              <div className="mt-3 text-sm text-gray-600">
+                Found {filteredSubscriptions.length} subscription{filteredSubscriptions.length !== 1 ? 's' : ''} matching "{searchQuery}"
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -220,7 +272,7 @@ function SubscriptionsContent() {
                             {subscription.member_name}
                             </div>
                             <div className="text-sm text-gray-500">
-                            Member ID: {subscription.member_id.slice(-8)}
+                            Receipt: {subscription.receipt_number}
                             </div>
                           </button>
                         </td>
@@ -292,14 +344,26 @@ function SubscriptionsContent() {
                 
                 {filteredSubscriptions.length === 0 && (
                   <div className="text-center py-12">
-                    <div className="text-4xl mb-4">📝</div>
+                    <div className="text-4xl mb-4">
+                      {searchQuery ? '🔍' : '📝'}
+                    </div>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No subscriptions found</h3>
                     <p className="text-gray-500">
-                      {filter !== 'all'
+                      {searchQuery
+                        ? `No subscriptions match "${searchQuery}". Try a different search term.`
+                        : filter !== 'all'
                         ? `No ${filter} subscriptions found. Try changing the filter.`
                         : 'Get started by creating your first subscription'
                       }
                     </p>
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="mt-4 text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Clear search
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
