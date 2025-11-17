@@ -27,7 +27,7 @@ function SchedulerContent() {
   const [lastResult, setLastResult] = useState<AutoResumeResult | null>(null);
   
   // WhatsApp states
-  const [testPhone, setTestPhone] = useState('918218134534');
+  const [testPhone, setTestPhone] = useState('918218134535');
   const [testResult, setTestResult] = useState<WhatsAppTestResponse | null>(null);
   const [testLoading, setTestLoading] = useState(false);
   const [expiringData, setExpiringData] = useState<ExpiringSubscriptionsResponse | null>(null);
@@ -385,9 +385,9 @@ function SchedulerContent() {
                     placeholder="918218134535"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Format: 918218134534 (country code + number)</p>
+                  <p className="text-xs text-gray-500 mt-1">Format: 915 (country code + number)</p>
                 </div>
-                <div className="flex items-end">
+                <div className="flex items-center mt-2 ">
                   <Button
                     variant="primary"
                     onClick={testWhatsAppConnection}
@@ -444,7 +444,7 @@ function SchedulerContent() {
                   <Button variant="outline" size="sm" onClick={fetchExpiringSubscriptions}>
                     🔄 Refresh
                   </Button>
-                  <Button 
+                  {/* <Button 
                     variant="success" 
                     size="sm" 
                     onClick={sendExpiryReminders}
@@ -452,7 +452,7 @@ function SchedulerContent() {
                     disabled={reminderLoading || !expiringData || expiringData.count === 0}
                   >
                     📱 Send Reminders Now
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             </CardHeader>
@@ -559,7 +559,7 @@ function SchedulerContent() {
                   <div>
                     <h4 className="font-semibold text-blue-900">Phone Number Format</h4>
                     <p className="text-sm text-blue-800">
-                      Use format: <code className="bg-blue-100 px-2 py-1 rounded">918218134534</code> (country code + number without spaces or special characters)
+                      Use format: <code className="bg-blue-100 px-2 py-1 rounded">918218134535</code> (country code + number without spaces or special characters)
                     </p>
                   </div>
                 </div>

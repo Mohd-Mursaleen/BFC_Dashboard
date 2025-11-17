@@ -116,7 +116,7 @@ export function ExpiringMembersWidget() {
                   )}
                 </div>
                 
-                <Button
+                {/* <Button
                   variant="success"
                   className="w-full"
                   onClick={sendReminders}
@@ -124,7 +124,7 @@ export function ExpiringMembersWidget() {
                   disabled={sendingReminders}
                 >
                   {sendingReminders ? 'Sending...' : '📱 Send Reminders Now'}
-                </Button>
+                </Button> */}
               </>
             ) : (
               <div className="text-center py-4">
@@ -134,7 +134,7 @@ export function ExpiringMembersWidget() {
             )}
 
             <div className="text-xs text-gray-500 text-center">
-              💡 Reminders sent automatically daily at 10 AM IST
+              💡 Reminders sent automatically 
             </div>
           </>
         )}
