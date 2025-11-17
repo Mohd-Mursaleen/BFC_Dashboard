@@ -7,6 +7,7 @@ import { LoadingSpinner } from '@/components/ui/loading';
 import { useNotification } from '@/components/ui/notification';
 import { whatsappApi } from '@/lib/api';
 import type { ExpiringSubscriptionsResponse } from '@/lib/types';
+import { Icons } from '@/lib/icons';
 
 export function ExpiringMembersWidget() {
   const { success, error: showError } = useNotification();
@@ -59,16 +60,20 @@ export function ExpiringMembersWidget() {
     <Card>
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-semibold">📱 WhatsApp Reminders - Expiring Soon</h3>
-            <p className="text-sm text-gray-600">Members with subscriptions expiring in the next 7 days</p>
+          <div className="flex items-center gap-3">
+            <Icons.whatsapp className="text-green-600" size={28} />
+            <div>
+              <h3 className="text-lg font-semibold">WhatsApp Reminders - Expiring Soon</h3>
+              <p className="text-sm text-gray-600">Members with subscriptions expiring in the next 7 days</p>
+            </div>
           </div>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={fetchExpiringMembers}
           >
-            🔄 Refresh
+            <Icons.refresh className="mr-2" size={16} />
+            Refresh
           </Button>
         </div>
       </CardHeader>
@@ -83,7 +88,7 @@ export function ExpiringMembersWidget() {
                     <div className="text-3xl font-bold text-orange-600">{data.count}</div>
                     <div className="text-sm text-orange-700">Expiring in 7 days</div>
                   </div>
-                  <div className="text-5xl">⏰</div>
+                  <Icons.clock className="text-orange-400" size={48} />
                 </div>
               </div>
               
@@ -95,7 +100,7 @@ export function ExpiringMembersWidget() {
                     </div>
                     <div className="text-sm text-red-700">Critical (≤3 days)</div>
                   </div>
-                  <div className="text-5xl">🚨</div>
+                  <Icons.bell className="text-red-400" size={48} />
                 </div>
               </div>
 
@@ -107,7 +112,7 @@ export function ExpiringMembersWidget() {
                     </div>
                     <div className="text-sm text-yellow-700">Warning (4-7 days)</div>
                   </div>
-                  <div className="text-5xl">⚠️</div>
+                  <Icons.warning className="text-yellow-400" size={48} />
                 </div>
               </div>
             </div>
@@ -156,8 +161,14 @@ export function ExpiringMembersWidget() {
                                 </span>
                               )}
                             </div>
-                            <div className="text-sm text-gray-600 mt-1">📱 {sub.member_phone}</div>
-                            <div className="text-xs text-gray-500 mt-1">Expires: {sub.end_date}</div>
+                            <div className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                              <Icons.phone size={14} />
+                              {sub.member_phone}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                              <Icons.calendar size={12} />
+                              Expires: {sub.end_date}
+                            </div>
                           </div>
                           <div className="text-right ml-4">
                             <div className={`text-2xl font-bold ${
@@ -198,14 +209,14 @@ export function ExpiringMembersWidget() {
               </>
             ) : (
               <div className="text-center py-8">
-                <div className="text-6xl mb-4">✅</div>
+                <Icons.success className="mx-auto mb-4 text-green-500" size={64} />
                 <p className="text-lg font-medium text-gray-900">All Clear!</p>
                 <p className="text-sm text-gray-600 mt-2">No subscriptions expiring in the next 7 days</p>
               </div>
             )}
 
             <div className="flex items-center justify-center gap-2 text-xs text-gray-500 bg-blue-50 p-3 rounded-lg">
-              <span>💡</span>
+              <Icons.bell className="text-blue-600" size={16} />
               <span>Reminders are sent automatically daily at 10:00 AM IST</span>
             </div>
           </>

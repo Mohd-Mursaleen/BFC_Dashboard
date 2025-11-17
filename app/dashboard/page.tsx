@@ -13,6 +13,7 @@ import { MemberGrowthChart } from '@/components/dashboard/charts/member-growth-c
 import { LoadingCard } from '@/components/ui/loading';
 import { analyticsApi } from '@/lib/api';
 import type { DashboardSummary, DashboardAnalytics } from '@/lib/types';
+import { Icons } from '@/lib/icons';
 
 export default function DashboardPage() {
   const [summaryData, setSummaryData] = useState<DashboardSummary | null>(null);
@@ -98,27 +99,27 @@ export default function DashboardPage() {
             <>
               <DashboardCard
                 card={summaryData.cards.total_members}
-                icon="👥"
+                Icon={Icons.members}
                 color="blue"
               />
               <DashboardCard
                 card={summaryData.cards.active_members}
-                icon="✅"
+                Icon={Icons.active}
                 color="green"
               />
               <DashboardCard
                 card={summaryData.cards.monthly_revenue}
-                icon="💰"
+                Icon={Icons.revenue}
                 color="purple"
               />
               <DashboardCard
                 card={summaryData.cards.expiring_soon}
-                icon="⚠️"
+                Icon={Icons.warning}
                 color="orange"
               />
               <DashboardCard
                 card={summaryData.cards.popular_plan}
-                icon="🏆"
+                Icon={Icons.trophy}
                 color="teal"
               />
             </>

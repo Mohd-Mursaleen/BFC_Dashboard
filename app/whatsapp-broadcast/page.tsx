@@ -10,6 +10,8 @@ import { LoadingSpinner } from '@/components/ui/loading';
 import { useNotification } from '@/components/ui/notification';
 import { whatsappApi, membersApi, plansApi } from '@/lib/api';
 import type { Member, Plan, WhatsAppTemplate, BulkSendResult } from '@/lib/types';
+import { Icons } from '@/lib/icons';
+import { HiOutlinePhone } from 'react-icons/hi';
 
 export default function WhatsAppBroadcastPage() {
   return (
@@ -194,9 +196,12 @@ function WhatsAppBroadcastContent() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">📱 WhatsApp Broadcast</h2>
-            <p className="text-gray-600">Select members and send bulk WhatsApp messages</p>
+          <div className="flex items-center gap-3">
+            <Icons.whatsapp className="text-green-600" size={32} />
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">WhatsApp Broadcast</h2>
+              <p className="text-gray-600">Select members and send bulk WhatsApp messages</p>
+            </div>
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-blue-600">{selectedMemberIds.size}</div>
@@ -289,7 +294,10 @@ function WhatsAppBroadcastContent() {
                         />
                         <div className="flex-1">
                           <div className="font-medium text-gray-900">{member.full_name}</div>
-                          <div className="text-sm text-gray-600">📱 {member.phone}</div>
+                          <div className="text-sm text-gray-600 flex items-center gap-1">
+                            <HiOutlinePhone size={14} />
+                            {member.phone}
+                          </div>
                           <div className="text-xs text-gray-500">{member.email}</div>
                         </div>
                         <div>
@@ -386,7 +394,17 @@ function WhatsAppBroadcastContent() {
                     loading={sending}
                     disabled={sending}
                   >
-                    {sending ? 'Sending Messages...' : `📱 Send to ${selectedMemberIds.size} Selected Members`}
+                    {sending ? (
+                      <>
+                        <Icons.refresh className="animate-spin" size={18} />
+                        Sending Messages...
+                      </>
+                    ) : (
+                      <>
+                        <Icons.whatsapp size={18} />
+                        Send to {selectedMemberIds.size} Selected Members
+                      </>
+                    )}
                   </Button>
                 </CardContent>
               </Card>
@@ -408,7 +426,10 @@ function WhatsAppBroadcastContent() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="font-medium text-gray-900">{member.full_name}</div>
-                            <div className="text-xs text-gray-600">📱 {member.phone}</div>
+                            <div className="text-xs text-gray-600 flex items-center gap-1">
+                              <HiOutlinePhone size={12} />
+                              {member.phone}
+                            </div>
                           </div>
                           <button
                             onClick={() => handleToggleMember(member.id)}
@@ -470,7 +491,11 @@ function WhatsAppBroadcastContent() {
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-medium">{result.phone}</span>
-                            <span>{result.success ? '✅' : '❌'}</span>
+                            {result.success ? (
+                              <Icons.success className="text-green-600" size={20} />
+                            ) : (
+                              <Icons.expired className="text-red-600" size={20} />
+                            )}
                           </div>
                           {result.error && (
                             <div className="text-red-600 mt-1">{result.error}</div>
@@ -494,7 +519,7 @@ function WhatsAppBroadcastContent() {
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <span className="text-blue-500 text-xl">💡</span>
+              <Icons.bell className="text-blue-500 flex-shrink-0" size={20} />
               <div className="text-sm text-blue-800">
                 <strong>Tips:</strong>
                 <ul className="list-disc list-inside mt-2 space-y-1">

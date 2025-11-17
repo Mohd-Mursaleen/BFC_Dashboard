@@ -3,6 +3,7 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Icons } from '@/lib/icons';
 
 interface SubscriptionStatusChartProps {
   data: {
@@ -18,13 +19,6 @@ const COLORS = {
   expired: '#ef4444',
 };
 
-const STATUS_ICONS = {
-  active: '✅',
-  paused: '⏸️',
-  expired: '❌',
-  total: '📊',
-};
-
 export function SubscriptionStatusChart({ data }: SubscriptionStatusChartProps) {
   const chartData = Object.entries(data).map(([name, value]) => ({
     name: name.charAt(0).toUpperCase() + name.slice(1),
@@ -37,7 +31,9 @@ export function SubscriptionStatusChart({ data }: SubscriptionStatusChartProps) 
   return (
     <Card>
       <CardHeader>
-        <h3 className="text-lg font-semibold">📈 Subscription Status</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold">Subscription Status</h3>
+        </div>
         <p className="text-sm text-gray-600">Current subscription breakdown</p>
       </CardHeader>
       <CardContent>
@@ -64,18 +60,26 @@ export function SubscriptionStatusChart({ data }: SubscriptionStatusChartProps) 
             <Legend />
           </PieChart>
         </ResponsiveContainer>
-        <div className="mt-4 grid grid-cols-4 gap-4">
-          {Object.entries(data).map(([status, count]) => (
-            <div key={status} className="text-center p-2 bg-gray-50 rounded-lg">
-              <div className="text-xl">{STATUS_ICONS[status as keyof typeof STATUS_ICONS]}</div>
-              <div className="text-lg font-bold text-gray-900">{count}</div>
-              <div className="text-xs text-gray-600 capitalize">{status}</div>
-            </div>
-          ))}
+        <div className="mt-4 grid grid-cols-3 gap-4">
+          <div className="text-center p-2 bg-green-50 rounded-lg">
+            <Icons.active className="mx-auto mb-1 text-green-600" size={20} />
+            <div className="text-lg font-bold text-gray-900">{data.active}</div>
+            <div className="text-xs text-gray-600">Active</div>
+          </div>
+          <div className="text-center p-2 bg-orange-50 rounded-lg">
+            <Icons.paused className="mx-auto mb-1 text-orange-600" size={20} />
+            <div className="text-lg font-bold text-gray-900">{data.paused}</div>
+            <div className="text-xs text-gray-600">Paused</div>
+          </div>
+          {/* <div className="text-center p-2 bg-red-50 rounded-lg">
+            <Icons.expired className="mx-auto mb-1 text-red-600" size={20} />
+            <div className="text-lg font-bold text-gray-900">{data.expired}</div>
+            <div className="text-xs text-gray-600">Expired</div>
+          </div> */}
           <div className="text-center p-2 bg-blue-50 rounded-lg border-2 border-blue-200">
-            <div className="text-xl">{STATUS_ICONS.total}</div>
+            <Icons.chartBar className="mx-auto mb-1 text-blue-600" size={20} />
             <div className="text-lg font-bold text-blue-900">{total}</div>
-            <div className="text-xs text-blue-700 capitalize">Total</div>
+            <div className="text-xs text-blue-700">Total</div>
           </div>
         </div>
       </CardContent>

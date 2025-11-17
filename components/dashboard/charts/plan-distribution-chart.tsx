@@ -21,7 +21,9 @@ export function PlanDistributionChart({ data }: PlanDistributionChartProps) {
   return (
     <Card>
       <CardHeader>
-        <h3 className="text-lg font-semibold">📊 Plan Distribution</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold">Plan Distribution</h3>
+        </div>
         <p className="text-sm text-gray-600">Member distribution across plans</p>
       </CardHeader>
       <CardContent>

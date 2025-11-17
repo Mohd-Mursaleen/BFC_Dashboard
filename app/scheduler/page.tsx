@@ -9,6 +9,7 @@ import { LoadingSpinner } from '@/components/ui/loading';
 import { useNotification } from '@/components/ui/notification';
 import { schedulerApi, subscriptionsApi, whatsappApi } from '@/lib/api';
 import type { SchedulerStatus, AutoResumeResult, WhatsAppTestResponse, ExpiringSubscriptionsResponse, ExpiryRemindersResponse } from '@/lib/types';
+import { Icons } from '@/lib/icons';
 
 export default function SchedulerPage() {
   return (
@@ -199,7 +200,8 @@ function SchedulerContent() {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Scheduler Status</h3>
                 <Button variant="outline" size="sm" onClick={fetchSchedulerStatus}>
-                  🔄 Refresh
+                  <Icons.refresh size={16} />
+                  Refresh
                 </Button>
               </div>
             </CardHeader>
@@ -264,7 +266,17 @@ function SchedulerContent() {
                     loading={triggerLoading}
                     disabled={!status.scheduler_running || triggerLoading}
                   >
-                    {triggerLoading ? 'Running...' : '▶️ Run Auto-Resume Now'}
+                    {triggerLoading ? (
+                      <>
+                        <Icons.refresh className="animate-spin" size={16} />
+                        Running...
+                      </>
+                    ) : (
+                      <>
+                        <Icons.play size={16} />
+                        Run Auto-Resume Now
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -442,7 +454,8 @@ function SchedulerContent() {
                 <h3 className="text-lg font-semibold">⏰ Expiring Subscriptions (Next 7 Days)</h3>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={fetchExpiringSubscriptions}>
-                    🔄 Refresh
+                    <Icons.refresh size={16} />
+                    Refresh
                   </Button>
                   {/* <Button 
                     variant="success" 

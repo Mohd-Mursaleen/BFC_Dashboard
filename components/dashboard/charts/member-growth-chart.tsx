@@ -30,7 +30,9 @@ export function MemberGrowthChart({ data }: MemberGrowthChartProps) {
   return (
     <Card>
       <CardHeader>
-        <h3 className="text-lg font-semibold">👥 Member Growth</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold">Member Growth</h3>
+        </div>
         <p className="text-sm text-gray-600">New members and total growth trend</p>
       </CardHeader>
       <CardContent>

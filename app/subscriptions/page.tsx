@@ -13,6 +13,7 @@ import { SubscriptionForm } from '@/components/forms/subscription-form';
 import { subscriptionsApi } from '@/lib/api';
 import { formatDate as formatDateUtil } from '@/lib/utils';
 import type { Subscription } from '@/lib/types';
+import { Icons } from '@/lib/icons';
 
 export default function SubscriptionsPage() {
   return (
@@ -137,14 +138,15 @@ function SubscriptionsContent() {
       <Layout title="Subscriptions">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex">
-            <span className="text-red-400 text-xl mr-3">⚠️</span>
+            <Icons.warning className="text-red-400 mr-3 flex-shrink-0" size={24} />
             <div>
               <h3 className="text-sm font-medium text-red-800">Error loading subscriptions</h3>
               <p className="mt-2 text-sm text-red-700">{error}</p>
               <button
                 onClick={fetchSubscriptions}
-                className="mt-4 bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200"
+                className="mt-4 bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200 flex items-center gap-2"
               >
+                <Icons.refresh size={16} />
                 Try Again
               </button>
             </div>
@@ -164,7 +166,7 @@ function SubscriptionsContent() {
             <p className="text-gray-600">Manage member subscriptions and pause/resume functionality</p>
           </div>
           <Button variant="primary" onClick={handleAddSubscription}>
-            <span>📝</span>
+            <Icons.subscriptions size={18} />
             New Subscription
           </Button>
         </div>
@@ -183,7 +185,7 @@ function SubscriptionsContent() {
                     placeholder="Search by member name, phone, receipt number, or plan..."
                     className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                  <Icons.search className="absolute left-3 top-2.5 text-gray-400" size={18} />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
@@ -208,7 +210,8 @@ function SubscriptionsContent() {
                   ]}
                 />
                 <Button variant="outline" size="sm" onClick={fetchSubscriptions}>
-                  🔄 Refresh
+                  <Icons.refresh size={16} />
+                  Refresh
                 </Button>
               </div>
             </div>
@@ -255,26 +258,22 @@ function SubscriptionsContent() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        View Details
-                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredSubscriptions.map((subscription) => (
-                      <tr key={subscription.id} className="hover:bg-gray-50">
+                      <tr 
+                        key={subscription.id} 
+                        onClick={() => window.location.href = `/subscriptions/${subscription.id}`}
+                        className="hover:bg-blue-50 cursor-pointer transition-colors"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            onClick={() => window.location.href = `/subscriptions/${subscription.id}`}
-                            className="text-left w-full"
-                          >
-                            <div className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
+                          <div className="text-sm font-medium text-gray-900">
                             {subscription.member_name}
-                            </div>
-                            <div className="text-sm text-gray-500">
+                          </div>
+                          <div className="text-sm text-gray-500">
                             Receipt: {subscription.receipt_number}
-                            </div>
-                          </button>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
@@ -326,17 +325,6 @@ function SubscriptionsContent() {
                             </div>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => window.location.href = `/subscriptions/${subscription.id}`}
-                            className="flex items-center gap-2"
-                          >
-                            <span>👁️</span>
-                            View Details
-                          </Button>
-                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -344,9 +332,11 @@ function SubscriptionsContent() {
                 
                 {filteredSubscriptions.length === 0 && (
                   <div className="text-center py-12">
-                    <div className="text-4xl mb-4">
-                      {searchQuery ? '🔍' : '📝'}
-                    </div>
+                    {searchQuery ? (
+                      <Icons.search className="mx-auto mb-4 text-gray-400" size={64} />
+                    ) : (
+                      <Icons.subscriptions className="mx-auto mb-4 text-gray-400" size={64} />
+                    )}
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No subscriptions found</h3>
                     <p className="text-gray-500">
                       {searchQuery

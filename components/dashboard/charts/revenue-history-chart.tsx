@@ -29,7 +29,9 @@ export function RevenueHistoryChart({ data }: RevenueHistoryChartProps) {
   return (
     <Card>
       <CardHeader>
-        <h3 className="text-lg font-semibold">💰 Revenue History</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold">Revenue History</h3>
+        </div>
         <p className="text-sm text-gray-600">Last 6 months revenue trend</p>
       </CardHeader>
       <CardContent>

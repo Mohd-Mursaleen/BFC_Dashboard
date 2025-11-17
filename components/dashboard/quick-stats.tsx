@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Icons } from '@/lib/icons';
 
 interface QuickStatsProps {
   stats: {
@@ -14,10 +15,10 @@ interface QuickStatsProps {
 
 export function QuickStats({ stats }: QuickStatsProps) {
   const statItems = [
-    { label: 'Total Plans', value: stats.total_plans, icon: '📋' },
-    { label: 'Male Members', value: stats.male_members, icon: '👨' },
-    { label: 'Female Members', value: stats.female_members, icon: '👩' },
-    { label: 'Paused Subscriptions', value: stats.paused_subscriptions, icon: '⏸️' },
+    { label: 'Total Plans', value: stats.total_plans, Icon: Icons.plans },
+    { label: 'Male Members', value: stats.male_members, Icon: Icons.male },
+    { label: 'Female Members', value: stats.female_members, Icon: Icons.female },
+    { label: 'Paused Subscriptions', value: stats.paused_subscriptions, Icon: Icons.paused },
   ];
 
   return (
@@ -27,13 +28,16 @@ export function QuickStats({ stats }: QuickStatsProps) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {statItems.map((item, index) => (
-            <div key={index} className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl mb-1">{item.icon}</div>
-              <div className="text-2xl font-bold text-gray-900">{item.value}</div>
-              <div className="text-sm text-gray-600">{item.label}</div>
-            </div>
-          ))}
+          {statItems.map((item, index) => {
+            const IconComponent = item.Icon;
+            return (
+              <div key={index} className="text-center p-3 bg-gray-50 rounded-lg">
+                <IconComponent className="mx-auto mb-2 text-blue-600" size={28} />
+                <div className="text-2xl font-bold text-gray-900">{item.value}</div>
+                <div className="text-sm text-gray-600">{item.label}</div>
+              </div>
+            );
+          })}
         </div>
       </CardContent>
     </Card>
