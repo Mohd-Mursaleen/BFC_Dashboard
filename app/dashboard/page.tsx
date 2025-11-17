@@ -6,12 +6,17 @@ import { DashboardCard } from '@/components/dashboard/dashboard-card';
 import { QuickStats } from '@/components/dashboard/quick-stats';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { ExpiringMembersWidget } from '@/components/dashboard/expiring-members-widget';
+import { PlanDistributionChart } from '@/components/dashboard/charts/plan-distribution-chart';
+import { SubscriptionStatusChart } from '@/components/dashboard/charts/subscription-status-chart';
+import { RevenueHistoryChart } from '@/components/dashboard/charts/revenue-history-chart';
+import { MemberGrowthChart } from '@/components/dashboard/charts/member-growth-chart';
 import { LoadingCard } from '@/components/ui/loading';
 import { analyticsApi } from '@/lib/api';
-import type { DashboardSummary } from '@/lib/types';
+import type { DashboardSummary, DashboardAnalytics } from '@/lib/types';
 
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardSummary | null>(null);
+  const [summaryData, setSummaryData] = useState<DashboardSummary | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<DashboardAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,8 +27,12 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await analyticsApi.getSummary();
-      setData(response);
+      const [summary, analytics] = await Promise.all([
+        analyticsApi.getSummary(),
+        analyticsApi.getDashboard()
+      ]);
+      setSummaryData(summary);
+      setAnalyticsData(analytics);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data');
@@ -40,12 +49,12 @@ export default function DashboardPage() {
     window.location.href = '/subscriptions';
   };
 
-  const handleViewReports = () => {
-    window.location.href = '/analytics';
-  };
-
   const handleManageScheduler = () => {
     window.location.href = '/scheduler';
+  };
+
+  const handleWhatsAppBroadcast = () => {
+    window.location.href = '/whatsapp-broadcast';
   };
 
   if (error) {
@@ -85,30 +94,30 @@ export default function DashboardPage() {
             Array.from({ length: 5 }).map((_, i) => (
               <LoadingCard key={i} />
             ))
-          ) : data ? (
+          ) : summaryData ? (
             <>
               <DashboardCard
-                card={data.cards.total_members}
+                card={summaryData.cards.total_members}
                 icon="👥"
                 color="blue"
               />
               <DashboardCard
-                card={data.cards.active_members}
+                card={summaryData.cards.active_members}
                 icon="✅"
                 color="green"
               />
               <DashboardCard
-                card={data.cards.monthly_revenue}
+                card={summaryData.cards.monthly_revenue}
                 icon="💰"
                 color="purple"
               />
               <DashboardCard
-                card={data.cards.expiring_soon}
+                card={summaryData.cards.expiring_soon}
                 icon="⚠️"
                 color="orange"
               />
               <DashboardCard
-                card={data.cards.popular_plan}
+                card={summaryData.cards.popular_plan}
                 icon="🏆"
                 color="teal"
               />
@@ -116,26 +125,53 @@ export default function DashboardPage() {
           ) : null}
         </div>
 
-        {/* Quick Stats, Actions, and WhatsApp Widget */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Charts Section */}
+        {loading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <LoadingCard key={i} />
+            ))}
+          </div>
+        ) : analyticsData ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PlanDistributionChart data={analyticsData.plan_distribution} />
+            <SubscriptionStatusChart data={analyticsData.subscription_status} />
+            {analyticsData.revenue_history && analyticsData.revenue_history.length > 0 && (
+              <RevenueHistoryChart data={analyticsData.revenue_history} />
+            )}
+            {analyticsData.member_growth && analyticsData.member_growth.length > 0 && (
+              <MemberGrowthChart data={analyticsData.member_growth} />
+            )}
+          </div>
+        ) : null}
+
+        {/* Quick Stats and Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {loading ? (
             <>
               <LoadingCard />
               <LoadingCard />
-              <LoadingCard />
             </>
-          ) : data ? (
+          ) : summaryData ? (
             <>
-              <QuickStats stats={data.quick_stats} />
+              <QuickStats stats={summaryData.quick_stats} />
               <QuickActions
                 onAddMember={handleAddMember}
                 onNewSubscription={handleNewSubscription}
-                onViewReports={handleViewReports}
                 onManageScheduler={handleManageScheduler}
+                onWhatsAppBroadcast={handleWhatsAppBroadcast}
               />
-              <ExpiringMembersWidget />
             </>
           ) : null}
+        </div>
+
+        {/* WhatsApp Widget - Full Width */}
+        <div>
+          {loading ? (
+            <LoadingCard />
+          ) : (
+            <ExpiringMembersWidget />
+          )}
         </div>
 
         {/* Auto-refresh indicator */}

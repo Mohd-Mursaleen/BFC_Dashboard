@@ -122,6 +122,19 @@ export interface DashboardAnalytics {
     paused: number;
     expired: number;
   };
+  revenue_history?: Array<{
+    month: string;
+    revenue: number;
+    month_name: string;
+    year: number;
+  }>;
+  member_growth?: Array<{
+    month: string;
+    new_members: number;
+    total_members: number;
+    month_name: string;
+    year: number;
+  }>;
 }
 
 export interface SchedulerStatus {

@@ -7,15 +7,15 @@ import { Button } from '@/components/ui/button';
 interface QuickActionsProps {
   onAddMember: () => void;
   onNewSubscription: () => void;
-  onViewReports: () => void;
   onManageScheduler: () => void;
+  onWhatsAppBroadcast: () => void;
 }
 
 export function QuickActions({ 
   onAddMember, 
   onNewSubscription, 
-  onViewReports, 
-  onManageScheduler 
+  onManageScheduler,
+  onWhatsAppBroadcast
 }: QuickActionsProps) {
   const actions = [
     {
@@ -31,9 +31,9 @@ export function QuickActions({
       variant: 'success' as const,
     },
     {
-      label: 'View Reports',
-      icon: '📊',
-      onClick: onViewReports,
+      label: 'WhatsApp Broadcast',
+      icon: '📱',
+      onClick: onWhatsAppBroadcast,
       variant: 'secondary' as const,
     },
     {

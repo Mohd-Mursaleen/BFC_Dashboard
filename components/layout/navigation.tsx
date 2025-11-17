@@ -18,7 +18,6 @@ export function Navigation({ isMobile = false, onItemClick }: NavigationProps) {
     { href: '/plans', label: 'Plans', icon: '📋' },
     { href: '/subscriptions', label: 'Subscriptions', icon: '📝' },
     { href: '/whatsapp-broadcast', label: 'WhatsApp Broadcast', icon: '📱' },
-    { href: '/analytics', label: 'Analytics', icon: '📊' },
     { href: '/scheduler', label: 'Scheduler', icon: '⚙️' },
   ];
 
