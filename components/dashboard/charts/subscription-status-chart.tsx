@@ -60,7 +60,7 @@ export function SubscriptionStatusChart({ data }: SubscriptionStatusChartProps) 
             <Legend />
           </PieChart>
         </ResponsiveContainer>
-        <div className="mt-4 grid grid-cols-3 gap-4">
+        <div className="mt-4 grid grid-cols-4 gap-4">
           <div className="text-center p-2 bg-green-50 rounded-lg">
             <Icons.active className="mx-auto mb-1 text-green-600" size={20} />
             <div className="text-lg font-bold text-gray-900">{data.active}</div>
@@ -71,11 +71,11 @@ export function SubscriptionStatusChart({ data }: SubscriptionStatusChartProps) 
             <div className="text-lg font-bold text-gray-900">{data.paused}</div>
             <div className="text-xs text-gray-600">Paused</div>
           </div>
-          {/* <div className="text-center p-2 bg-red-50 rounded-lg">
+          <div className="text-center p-2 bg-red-50 rounded-lg">
             <Icons.expired className="mx-auto mb-1 text-red-600" size={20} />
             <div className="text-lg font-bold text-gray-900">{data.expired}</div>
             <div className="text-xs text-gray-600">Expired</div>
-          </div> */}
+          </div>
           <div className="text-center p-2 bg-blue-50 rounded-lg border-2 border-blue-200">
             <Icons.chartBar className="mx-auto mb-1 text-blue-600" size={20} />
             <div className="text-lg font-bold text-blue-900">{total}</div>
