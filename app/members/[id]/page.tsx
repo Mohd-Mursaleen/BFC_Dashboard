@@ -15,6 +15,10 @@ import { SubscriptionForm } from '@/components/forms/subscription-form';
 import { membersApi, subscriptionsApi } from '@/lib/api';
 import { formatDate, calculateAge, isSubscriptionActive, isSubscriptionExpired } from '@/lib/utils';
 import type { Member, Subscription } from '@/lib/types';
+import { Icons } from '@/lib/icons';
+import { BsGenderMale, BsGenderFemale } from 'react-icons/bs';
+import { FiUser, FiEdit, FiTrash2 } from 'react-icons/fi';
+import { MdOutlineAccessTime } from 'react-icons/md';
 
 export default function MemberDetailPage() {
   return (
@@ -146,15 +150,16 @@ function MemberDetailContent() {
       <Layout title="Member Details">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex">
-            <span className="text-red-400 text-xl mr-3">⚠️</span>
+            <Icons.warning className="text-red-400 mr-3 flex-shrink-0" size={24} />
             <div>
               <h3 className="text-sm font-medium text-red-800">Error loading member</h3>
               <p className="mt-2 text-sm text-red-700">{error || 'Member not found'}</p>
               <div className="mt-4 flex gap-2">
                 <button
                   onClick={fetchMember}
-                  className="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200"
+                  className="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200 flex items-center gap-2"
                 >
+                  <Icons.refresh size={16} />
                   Try Again
                 </button>
                 <button
@@ -192,21 +197,21 @@ function MemberDetailContent() {
           <div className="flex gap-3">
             {hasActiveSubscription ? (
               <Button variant="danger" onClick={handleExpireSubscription}>
-                <span>⏰</span>
+                <MdOutlineAccessTime size={18} />
                 Expire Subscription
               </Button>
             ) : (
               <Button variant="success" onClick={handleAddSubscription}>
-                <span>📝</span>
+                <Icons.subscriptions size={18} />
                 Add Subscription
               </Button>
             )}
             <Button variant="primary" onClick={handleEdit}>
-              <span>✏️</span>
+              <FiEdit size={18} />
               Edit Member
             </Button>
             <Button variant="danger" onClick={handleDelete}>
-              <span>🗑️</span>
+              <FiTrash2 size={18} />
               Delete Member
             </Button>
           </div>
@@ -249,8 +254,14 @@ function MemberDetailContent() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Gender</label>
-                  <p className="text-sm text-gray-900 capitalize">
-                    {member.gender === 'male' ? '👨 Male' : member.gender === 'female' ? '👩 Female' : '👤 Other'}
+                  <p className="text-sm text-gray-900 capitalize flex items-center gap-2">
+                    {member.gender === 'male' ? (
+                      <><BsGenderMale className="text-blue-600" size={16} /> Male</>
+                    ) : member.gender === 'female' ? (
+                      <><BsGenderFemale className="text-pink-600" size={16} /> Female</>
+                    ) : (
+                      <><FiUser className="text-gray-600" size={16} /> Other</>
+                    )}
                   </p>
                 </div>
               </div>
@@ -304,7 +315,7 @@ function MemberDetailContent() {
                   {Object.entries(member.medical_history).map(([condition, hasCondition]) => (
                     hasCondition && (
                       <div key={condition} className="flex items-center gap-2 p-2 bg-orange-50 rounded-lg">
-                        <span className="text-orange-500">⚠️</span>
+                        <Icons.warning className="text-orange-500" size={16} />
                         <span className="text-sm text-orange-800 capitalize">
                           {condition.replace(/_/g, ' ')}
                         </span>
@@ -345,7 +356,7 @@ function MemberDetailContent() {
                 <h3 className="text-lg font-semibold">Subscriptions ({memberSubscriptions.length})</h3>
                 {!hasActiveSubscription && (
                   <Button variant="success" size="sm" onClick={handleAddSubscription}>
-                    <span>📝</span>
+                    <Icons.subscriptions size={16} />
                     Add Subscription
                   </Button>
                 )}
@@ -407,11 +418,11 @@ function MemberDetailContent() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <div className="text-4xl mb-4">📝</div>
+                  <Icons.subscriptions className="mx-auto mb-4 text-gray-400" size={64} />
                   <h4 className="text-lg font-medium text-gray-900 mb-2">No Subscriptions</h4>
                   <p className="text-gray-500 mb-4">This member doesn't have any subscriptions yet.</p>
                   <Button variant="success" onClick={handleAddSubscription}>
-                    <span>📝</span>
+                    <Icons.subscriptions size={18} />
                     Create First Subscription
                   </Button>
                 </div>

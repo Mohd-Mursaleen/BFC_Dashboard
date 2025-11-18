@@ -3,42 +3,43 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Icons } from '@/lib/icons';
 
 interface QuickActionsProps {
   onAddMember: () => void;
   onNewSubscription: () => void;
-  onViewReports: () => void;
   onManageScheduler: () => void;
+  onWhatsAppBroadcast: () => void;
 }
 
 export function QuickActions({ 
   onAddMember, 
   onNewSubscription, 
-  onViewReports, 
-  onManageScheduler 
+  onManageScheduler,
+  onWhatsAppBroadcast
 }: QuickActionsProps) {
   const actions = [
     {
       label: 'Add Member',
-      icon: '👤',
+      Icon: Icons.addMember,
       onClick: onAddMember,
       variant: 'outline' as const,
     },
     {
       label: 'New Subscription',
-      icon: '📋',
+      Icon: Icons.subscriptions,
       onClick: onNewSubscription,
       variant: 'success' as const,
     },
     {
-      label: 'View Reports',
-      icon: '📊',
-      onClick: onViewReports,
+      label: 'WhatsApp Broadcast',
+      Icon: Icons.whatsapp,
+      onClick: onWhatsAppBroadcast,
       variant: 'secondary' as const,
     },
     {
       label: 'Scheduler',
-      icon: '⚙️',
+      Icon: Icons.scheduler,
       onClick: onManageScheduler,
       variant: 'warning' as const,
     },
@@ -51,17 +52,20 @@ export function QuickActions({
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-3">
-          {actions.map((action, index) => (
-            <Button
-              key={index}
-              variant={action.variant}
-              onClick={action.onClick}
-              className="flex flex-col items-center gap-2 h-auto py-4"
-            >
-              <span className="text-xl">{action.icon}</span>
-              <span className="text-sm">{action.label}</span>
-            </Button>
-          ))}
+          {actions.map((action, index) => {
+            const IconComponent = action.Icon;
+            return (
+              <Button
+                key={index}
+                variant={action.variant}
+                onClick={action.onClick}
+                className="flex flex-col items-center gap-2 h-auto py-4"
+              >
+                <IconComponent size={24} />
+                <span className="text-sm">{action.label}</span>
+              </Button>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

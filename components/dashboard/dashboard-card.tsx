@@ -3,14 +3,15 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { DashboardCard as DashboardCardType } from '@/lib/types';
+import type { IconType } from 'react-icons';
 
 interface DashboardCardProps {
   card: DashboardCardType;
-  icon?: string;
+  Icon?: IconType;
   color?: 'blue' | 'green' | 'purple' | 'orange' | 'teal' | 'red';
 }
 
-export function DashboardCard({ card, icon, color = 'blue' }: DashboardCardProps) {
+export function DashboardCard({ card, Icon, color = 'blue' }: DashboardCardProps) {
   const colorClasses = {
     blue: 'text-blue-600 bg-blue-50',
     green: 'text-green-600 bg-green-50',
@@ -20,20 +21,15 @@ export function DashboardCard({ card, icon, color = 'blue' }: DashboardCardProps
     red: 'text-red-600 bg-red-50',
   };
 
-  const getChangeColor = (change?: string) => {
-    if (!change) return '';
-    return change.startsWith('+') ? 'text-green-600' : 'text-red-600';
-  };
-
   return (
     <Card hover className="h-full">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
-              {icon && (
-                <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
-                  <span className="text-xl">{icon}</span>
+              {Icon && (
+                <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
+                  <Icon size={24} />
                 </div>
               )}
               <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">

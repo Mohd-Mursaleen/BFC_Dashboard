@@ -9,6 +9,7 @@ import { LoadingSpinner } from '@/components/ui/loading';
 import { useNotification } from '@/components/ui/notification';
 import { schedulerApi, subscriptionsApi, whatsappApi } from '@/lib/api';
 import type { SchedulerStatus, AutoResumeResult, WhatsAppTestResponse, ExpiringSubscriptionsResponse, ExpiryRemindersResponse } from '@/lib/types';
+import { Icons } from '@/lib/icons';
 
 export default function SchedulerPage() {
   return (
@@ -27,7 +28,7 @@ function SchedulerContent() {
   const [lastResult, setLastResult] = useState<AutoResumeResult | null>(null);
   
   // WhatsApp states
-  const [testPhone, setTestPhone] = useState('918218134534');
+  const [testPhone, setTestPhone] = useState('918218134535');
   const [testResult, setTestResult] = useState<WhatsAppTestResponse | null>(null);
   const [testLoading, setTestLoading] = useState(false);
   const [expiringData, setExpiringData] = useState<ExpiringSubscriptionsResponse | null>(null);
@@ -199,7 +200,8 @@ function SchedulerContent() {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Scheduler Status</h3>
                 <Button variant="outline" size="sm" onClick={fetchSchedulerStatus}>
-                  🔄 Refresh
+                  <Icons.refresh size={16} />
+                  Refresh
                 </Button>
               </div>
             </CardHeader>
@@ -264,7 +266,17 @@ function SchedulerContent() {
                     loading={triggerLoading}
                     disabled={!status.scheduler_running || triggerLoading}
                   >
-                    {triggerLoading ? 'Running...' : '▶️ Run Auto-Resume Now'}
+                    {triggerLoading ? (
+                      <>
+                        <Icons.refresh className="animate-spin" size={16} />
+                        Running...
+                      </>
+                    ) : (
+                      <>
+                        <Icons.play size={16} />
+                        Run Auto-Resume Now
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -385,9 +397,9 @@ function SchedulerContent() {
                     placeholder="918218134535"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Format: 918218134534 (country code + number)</p>
+                  <p className="text-xs text-gray-500 mt-1">Format: 915 (country code + number)</p>
                 </div>
-                <div className="flex items-end">
+                <div className="flex items-center mt-2 ">
                   <Button
                     variant="primary"
                     onClick={testWhatsAppConnection}
@@ -442,9 +454,10 @@ function SchedulerContent() {
                 <h3 className="text-lg font-semibold">⏰ Expiring Subscriptions (Next 7 Days)</h3>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={fetchExpiringSubscriptions}>
-                    🔄 Refresh
+                    <Icons.refresh size={16} />
+                    Refresh
                   </Button>
-                  <Button 
+                  {/* <Button 
                     variant="success" 
                     size="sm" 
                     onClick={sendExpiryReminders}
@@ -452,7 +465,7 @@ function SchedulerContent() {
                     disabled={reminderLoading || !expiringData || expiringData.count === 0}
                   >
                     📱 Send Reminders Now
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             </CardHeader>
@@ -559,7 +572,7 @@ function SchedulerContent() {
                   <div>
                     <h4 className="font-semibold text-blue-900">Phone Number Format</h4>
                     <p className="text-sm text-blue-800">
-                      Use format: <code className="bg-blue-100 px-2 py-1 rounded">918218134534</code> (country code + number without spaces or special characters)
+                      Use format: <code className="bg-blue-100 px-2 py-1 rounded">918218134535</code> (country code + number without spaces or special characters)
                     </p>
                   </div>
                 </div>

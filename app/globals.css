@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  /* Gym Management System Color Palette */
-  --gym-primary: #1E40AF;      /* Strong Blue - Trust, Reliability */
-  --gym-secondary: #059669;    /* Success Green - Growth, Health */
-  --gym-accent: #DC2626;       /* Alert Red - Urgent Actions */
-  --gym-orange: #EA580C;       /* Warning Orange - Attention */
-  --gym-purple: #7C3AED;       /* Premium Purple - VIP Features */
-  --gym-teal: #0D9488;         /* Info Teal - Neutral Information */
+  /* Modern Color Palette - Inspired by fitness dashboard */
+  --gym-primary: #3B82F6;      /* Bright Blue - Primary actions */
+  --gym-secondary: #10B981;    /* Success Green - Growth, Health */
+  --gym-accent: #EF4444;       /* Alert Red - Urgent Actions */
+  --gym-orange: #F59E0B;       /* Warning Orange - Attention */
+  --gym-purple: #8B5CF6;       /* Premium Purple - VIP Features */
+  --gym-teal: #14B8A6;         /* Info Teal - Neutral Information */
+  --gym-pink: #EC4899;         /* Pink - Special features */
 
   /* Status Colors */
-  --status-active: #16A34A;    /* Green - Good to go */
-  --status-warning: #EAB308;   /* Yellow - Needs attention */
-  --status-danger: #DC2626;    /* Red - Problem/Expired */
+  --status-active: #10B981;    /* Green - Good to go */
+  --status-warning: #F59E0B;   /* Yellow - Needs attention */
+  --status-danger: #EF4444;    /* Red - Problem/Expired */
   --status-paused: #F59E0B;    /* Orange - Temporarily stopped */
   --status-inactive: #6B7280;  /* Gray - Not in use */
 
   /* Background & Text Colors */
   --bg-primary: #FFFFFF;       /* Clean white */
-  --bg-secondary: #F8FAFC;     /* Light gray */
+  --bg-secondary: #F8FAFC;     /* Light gray background */
   --bg-card: #FFFFFF;          /* Card background */
-  --bg-sidebar: #1E293B;       /* Dark sidebar */
+  --bg-sidebar: #0F172A;       /* Dark navy sidebar */
+  --bg-hover: #F1F5F9;         /* Hover state */
   
   --text-primary: #0F172A;     /* Dark text */
   --text-secondary: #64748B;   /* Medium gray */
@@ -29,6 +31,12 @@
   
   --border-light: #E2E8F0;     /* Light borders */
   --border-medium: #CBD5E1;    /* Medium borders */
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
   /* Font Variables */
   --font-sans: var(--font-inter);

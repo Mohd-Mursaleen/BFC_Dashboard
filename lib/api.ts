@@ -150,4 +150,6 @@ export const whatsappApi = {
     return apiCall(`/api/whatsapp/expiring-subscriptions${query}`);
   },
   sendExpiryReminders: () => apiCall('/api/whatsapp/send-expiry-reminders', { method: 'POST' }),
+  getTemplates: () => apiCall('/api/whatsapp/templates'),
+  bulkSend: (data: any) => apiCall('/api/whatsapp/bulk-send', { method: 'POST', body: JSON.stringify(data) }),
 };

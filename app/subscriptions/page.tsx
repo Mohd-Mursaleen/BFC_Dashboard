@@ -13,6 +13,7 @@ import { SubscriptionForm } from '@/components/forms/subscription-form';
 import { subscriptionsApi } from '@/lib/api';
 import { formatDate as formatDateUtil } from '@/lib/utils';
 import type { Subscription } from '@/lib/types';
+import { Icons } from '@/lib/icons';
 
 export default function SubscriptionsPage() {
   return (
@@ -28,6 +29,7 @@ function SubscriptionsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   
   // Modal states
@@ -62,16 +64,35 @@ function SubscriptionsContent() {
     const today = new Date().toISOString().split('T')[0];
     const endDate = subscription.actual_end_date || subscription.end_date;
     
+    // Status filter
+    let statusMatch = true;
     switch (filter) {
       case 'active':
-        return subscription.status === 'active' && !subscription.is_currently_paused && endDate >= today;
+        statusMatch = subscription.status === 'active' && !subscription.is_currently_paused && endDate >= today;
+        break;
       case 'paused':
-        return subscription.is_currently_paused;
+        statusMatch = subscription.is_currently_paused;
+        break;
       case 'expired':
-        return endDate < today;
+        statusMatch = endDate < today;
+        break;
       default:
-        return true;
+        statusMatch = true;
     }
+    
+    // Search filter
+    let searchMatch = true;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      searchMatch = 
+        subscription.member_name?.toLowerCase().includes(query) ||
+        subscription.member_phone?.toLowerCase().includes(query) ||
+        subscription.receipt_number?.toLowerCase().includes(query) ||
+        subscription.plan_name?.toLowerCase().includes(query) ||
+        subscription.member_id?.toLowerCase().includes(query);
+    }
+    
+    return statusMatch && searchMatch;
   });
 
   const getStatusBadgeVariant = (subscription: Subscription) => {
@@ -117,14 +138,15 @@ function SubscriptionsContent() {
       <Layout title="Subscriptions">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex">
-            <span className="text-red-400 text-xl mr-3">⚠️</span>
+            <Icons.warning className="text-red-400 mr-3 flex-shrink-0" size={24} />
             <div>
               <h3 className="text-sm font-medium text-red-800">Error loading subscriptions</h3>
               <p className="mt-2 text-sm text-red-700">{error}</p>
               <button
                 onClick={fetchSubscriptions}
-                className="mt-4 bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200"
+                className="mt-4 bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200 flex items-center gap-2"
               >
+                <Icons.refresh size={16} />
                 Try Again
               </button>
             </div>
@@ -144,29 +166,62 @@ function SubscriptionsContent() {
             <p className="text-gray-600">Manage member subscriptions and pause/resume functionality</p>
           </div>
           <Button variant="primary" onClick={handleAddSubscription}>
-            <span>📝</span>
+            <Icons.subscriptions size={18} />
             New Subscription
           </Button>
         </div>
 
-        {/* Filters */}
+        {/* Search and Filters */}
         <Card>
           <CardContent className="py-4">
-            <div className="flex items-center gap-4">
-              <Select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                options={[
-                  { value: 'all', label: 'All Subscriptions' },
-                  { value: 'active', label: 'Active Only' },
-                  { value: 'paused', label: 'Paused Only' },
-                  { value: 'expired', label: 'Expired Only' },
-                ]}
-              />
-              <Button variant="outline" size="sm" onClick={fetchSubscriptions}>
-                🔄 Refresh
-              </Button>
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search Input */}
+              <div className="flex-1">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by member name, phone, receipt number, or plan..."
+                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <Icons.search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Status Filter */}
+              <div className="flex items-center gap-2">
+                <Select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  options={[
+                    { value: 'all', label: 'All Subscriptions' },
+                    { value: 'active', label: 'Active Only' },
+                    { value: 'paused', label: 'Paused Only' },
+                    { value: 'expired', label: 'Expired Only' },
+                  ]}
+                />
+                <Button variant="outline" size="sm" onClick={fetchSubscriptions}>
+                  <Icons.refresh size={16} />
+                  Refresh
+                </Button>
+              </div>
             </div>
+            
+            {/* Search Results Info */}
+            {searchQuery && (
+              <div className="mt-3 text-sm text-gray-600">
+                Found {filteredSubscriptions.length} subscription{filteredSubscriptions.length !== 1 ? 's' : ''} matching "{searchQuery}"
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -203,26 +258,22 @@ function SubscriptionsContent() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        View Details
-                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredSubscriptions.map((subscription) => (
-                      <tr key={subscription.id} className="hover:bg-gray-50">
+                      <tr 
+                        key={subscription.id} 
+                        onClick={() => window.location.href = `/subscriptions/${subscription.id}`}
+                        className="hover:bg-blue-50 cursor-pointer transition-colors"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            onClick={() => window.location.href = `/subscriptions/${subscription.id}`}
-                            className="text-left w-full"
-                          >
-                            <div className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
+                          <div className="text-sm font-medium text-gray-900">
                             {subscription.member_name}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                            Member ID: {subscription.member_id.slice(-8)}
-                            </div>
-                          </button>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            Receipt: {subscription.receipt_number}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
@@ -274,17 +325,6 @@ function SubscriptionsContent() {
                             </div>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => window.location.href = `/subscriptions/${subscription.id}`}
-                            className="flex items-center gap-2"
-                          >
-                            <span>👁️</span>
-                            View Details
-                          </Button>
-                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -292,14 +332,28 @@ function SubscriptionsContent() {
                 
                 {filteredSubscriptions.length === 0 && (
                   <div className="text-center py-12">
-                    <div className="text-4xl mb-4">📝</div>
+                    {searchQuery ? (
+                      <Icons.search className="mx-auto mb-4 text-gray-400" size={64} />
+                    ) : (
+                      <Icons.subscriptions className="mx-auto mb-4 text-gray-400" size={64} />
+                    )}
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No subscriptions found</h3>
                     <p className="text-gray-500">
-                      {filter !== 'all'
+                      {searchQuery
+                        ? `No subscriptions match "${searchQuery}". Try a different search term.`
+                        : filter !== 'all'
                         ? `No ${filter} subscriptions found. Try changing the filter.`
                         : 'Get started by creating your first subscription'
                       }
                     </p>
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="mt-4 text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Clear search
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
