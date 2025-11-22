@@ -100,7 +100,10 @@ export const plansApi = {
 
 // Subscriptions API
 export const subscriptionsApi = {
-  getAll: () => apiCall('/api/subscriptions/'),
+  getAll: (params?: Record<string, string>) => {
+    const query = params ? `?${new URLSearchParams(params)}` : '';
+    return apiCall(`/api/subscriptions/${query}`);
+  },
   getById: (id: string) => apiCall(`/api/subscriptions/${id}`),
   getPauseInfo: (id: string) => apiCall(`/api/subscriptions/${id}/pause-info`),
   create: (data: any) => apiCall('/api/subscriptions/', { method: 'POST', body: JSON.stringify(data) }),

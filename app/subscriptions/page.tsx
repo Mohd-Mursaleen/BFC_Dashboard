@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select } from '@/components/ui/input';
 import { LoadingTable } from '@/components/ui/loading';
+import { Pagination } from '@/components/ui/pagination';
 import { useNotification } from '@/components/ui/notification';
 import { SubscriptionForm } from '@/components/forms/subscription-form';
 import { subscriptionsApi } from '@/lib/api';
@@ -35,15 +36,53 @@ function SubscriptionsContent() {
   // Modal states
   const [showSubscriptionForm, setShowSubscriptionForm] = useState(false);
 
+  const [pagination, setPagination] = useState({
+    page: 1,
+    page_size: 50,
+    total: 0,
+    total_pages: 1
+  });
+
   useEffect(() => {
-    fetchSubscriptions();
-  }, []);
+    // Debounce search to avoid too many API calls
+    const timeoutId = setTimeout(() => {
+      fetchSubscriptions();
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [pagination.page, pagination.page_size, filter, searchQuery]);
 
   const fetchSubscriptions = async () => {
     try {
       setLoading(true);
-      const response = await subscriptionsApi.getAll();
-      setSubscriptions(response);
+      
+      const params: Record<string, string> = {
+        page: pagination.page.toString(),
+        page_size: pagination.page_size.toString(),
+      };
+
+      if (filter !== 'all') params.status = filter;
+      if (searchQuery) params.search = searchQuery;
+
+      const response = await subscriptionsApi.getAll(params);
+      
+      // Handle paginated response format: {data: Subscription[], pagination: {...}}
+      if (response.data && response.pagination) {
+        setSubscriptions(response.data);
+        setPagination(prev => ({
+          ...prev,
+          total: response.pagination.total,
+          total_pages: response.pagination.total_pages
+        }));
+      } else {
+        // Fallback for non-paginated response
+        const data = Array.isArray(response) ? response : (response.data || []);
+        setSubscriptions(data);
+        setPagination(prev => ({
+          ...prev,
+          total: data.length,
+          total_pages: 1
+        }));
+      }
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch subscriptions');
@@ -59,41 +98,6 @@ function SubscriptionsContent() {
   const handleFormSuccess = () => {
     fetchSubscriptions();
   };
-
-  const filteredSubscriptions = subscriptions.filter(subscription => {
-    const today = new Date().toISOString().split('T')[0];
-    const endDate = subscription.actual_end_date || subscription.end_date;
-    
-    // Status filter
-    let statusMatch = true;
-    switch (filter) {
-      case 'active':
-        statusMatch = subscription.status === 'active' && !subscription.is_currently_paused && endDate >= today;
-        break;
-      case 'paused':
-        statusMatch = subscription.is_currently_paused;
-        break;
-      case 'expired':
-        statusMatch = endDate < today;
-        break;
-      default:
-        statusMatch = true;
-    }
-    
-    // Search filter
-    let searchMatch = true;
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      searchMatch = 
-        subscription.member_name?.toLowerCase().includes(query) ||
-        subscription.member_phone?.toLowerCase().includes(query) ||
-        subscription.receipt_number?.toLowerCase().includes(query) ||
-        subscription.plan_name?.toLowerCase().includes(query) ||
-        subscription.member_id?.toLowerCase().includes(query);
-    }
-    
-    return statusMatch && searchMatch;
-  });
 
   const getStatusBadgeVariant = (subscription: Subscription) => {
     const today = new Date().toISOString().split('T')[0];
@@ -181,14 +185,20 @@ function SubscriptionsContent() {
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setPagination(prev => ({ ...prev, page: 1 }));
+                    }}
                     placeholder="Search by member name, phone, receipt number, or plan..."
                     className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <Icons.search className="absolute left-3 top-2.5 text-gray-400" size={18} />
                   {searchQuery && (
                     <button
-                      onClick={() => setSearchQuery('')}
+                      onClick={() => {
+                        setSearchQuery('');
+                        setPagination(prev => ({ ...prev, page: 1 }));
+                      }}
                       className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                     >
                       ✕
@@ -201,7 +211,10 @@ function SubscriptionsContent() {
               <div className="flex items-center gap-2">
                 <Select
                   value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
+                  onChange={(e) => {
+                    setFilter(e.target.value);
+                    setPagination(prev => ({ ...prev, page: 1 }));
+                  }}
                   options={[
                     { value: 'all', label: 'All Subscriptions' },
                     { value: 'active', label: 'Active Only' },
@@ -219,7 +232,7 @@ function SubscriptionsContent() {
             {/* Search Results Info */}
             {searchQuery && (
               <div className="mt-3 text-sm text-gray-600">
-                Found {filteredSubscriptions.length} subscription{filteredSubscriptions.length !== 1 ? 's' : ''} matching "{searchQuery}"
+                Found {pagination.total} subscription{pagination.total !== 1 ? 's' : ''} matching "{searchQuery}"
               </div>
             )}
           </CardContent>
@@ -232,7 +245,7 @@ function SubscriptionsContent() {
           <Card>
             <CardHeader>
               <h3 className="text-lg font-semibold">
-                Subscriptions ({filteredSubscriptions.length})
+                Subscriptions ({pagination.total})
               </h3>
             </CardHeader>
             <CardContent className="p-0">
@@ -261,7 +274,7 @@ function SubscriptionsContent() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredSubscriptions.map((subscription) => (
+                    {subscriptions.map((subscription) => (
                       <tr 
                         key={subscription.id} 
                         onClick={() => window.location.href = `/subscriptions/${subscription.id}`}
@@ -330,7 +343,7 @@ function SubscriptionsContent() {
                   </tbody>
                 </table>
                 
-                {filteredSubscriptions.length === 0 && (
+                {subscriptions.length === 0 && (
                   <div className="text-center py-12">
                     {searchQuery ? (
                       <Icons.search className="mx-auto mb-4 text-gray-400" size={64} />
@@ -348,7 +361,10 @@ function SubscriptionsContent() {
                     </p>
                     {searchQuery && (
                       <button
-                        onClick={() => setSearchQuery('')}
+                        onClick={() => {
+                          setSearchQuery('');
+                          setPagination(prev => ({ ...prev, page: 1 }));
+                        }}
                         className="mt-4 text-blue-600 hover:text-blue-800 underline"
                       >
                         Clear search
@@ -357,6 +373,15 @@ function SubscriptionsContent() {
                   </div>
                 )}
               </div>
+              
+              <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.total_pages}
+                pageSize={pagination.page_size}
+                totalItems={pagination.total}
+                onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+                onPageSizeChange={(pageSize) => setPagination(prev => ({ ...prev, page_size: pageSize, page: 1 }))}
+              />
             </CardContent>
           </Card>
         )}

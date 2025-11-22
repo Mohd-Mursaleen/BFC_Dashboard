@@ -69,12 +69,21 @@ function MemberDetailContent() {
   const fetchMemberSubscriptions = async () => {
     try {
       setSubscriptionsLoading(true);
-      const allSubscriptions = await subscriptionsApi.getAll();
-      // Filter subscriptions for this member
+      // We use the 'search' parameter with memberId to filter on the backend.
+      // This ensures we find the subscription even if it's not on the first page.
+      // NOTE: This assumes the backend 'search' functionality checks the member_id column.
+      const response = await subscriptionsApi.getAll({ search: memberId });
+      
+      const allSubscriptions = Array.isArray(response) 
+        ? response 
+        : (response.data || []);
+        
+      // We still filter client-side just in case the search returned partial matches
       const memberSubs = allSubscriptions.filter((sub: Subscription) => sub.member_id === memberId);
       setMemberSubscriptions(memberSubs);
     } catch (err) {
       console.error('Failed to fetch member subscriptions:', err);
+      setMemberSubscriptions([]);
     } finally {
       setSubscriptionsLoading(false);
     }

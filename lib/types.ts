@@ -60,9 +60,13 @@ export interface Subscription {
   receipt_number: string;
   created_at: string;
   updated_at: string;
+  // Joined fields from list endpoint (limited data)
   member_name?: string;
   member_phone?: string;
   plan_name?: string;
+  // Nested objects from detail endpoint (full data)
+  member?: Member;
+  plan?: Plan;
 }
 
 export interface DashboardCard {
@@ -259,4 +263,17 @@ export interface BulkSendResult {
   successful: number;
   failed: number;
   results: BulkSendResultItem[];
+}
+
+// Pagination Types
+export interface PaginationMetadata {
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: PaginationMetadata;
 }

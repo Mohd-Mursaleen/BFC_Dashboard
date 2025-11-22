@@ -12,9 +12,9 @@ import { ConfirmModal } from '@/components/ui/modal';
 import { useNotification } from '@/components/ui/notification';
 import { SubscriptionForm } from '@/components/forms/subscription-form';
 import { PauseReasonModal } from '@/components/forms/pause-reason-modal';
-import { subscriptionsApi, membersApi, plansApi } from '@/lib/api';
+import { subscriptionsApi } from '@/lib/api';
 import { formatDate as formatDateUtil } from '@/lib/utils';
-import type { Subscription, Member, Plan } from '@/lib/types';
+import type { Subscription } from '@/lib/types';
 
 export default function SubscriptionDetailPage() {
   return (
@@ -29,8 +29,6 @@ function SubscriptionDetailContent() {
   const router = useRouter();
   const { success, error: showError } = useNotification();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [member, setMember] = useState<Member | null>(null);
-  const [plan, setPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -53,17 +51,9 @@ function SubscriptionDetailContent() {
   const fetchSubscriptionDetails = async () => {
     try {
       setLoading(true);
+      // Backend returns subscription with nested member and plan objects
       const subscriptionResponse = await subscriptionsApi.getById(subscriptionId);
       setSubscription(subscriptionResponse);
-
-      // Fetch member and plan details
-      const [memberResponse, planResponse] = await Promise.all([
-        membersApi.getById(subscriptionResponse.member_id),
-        plansApi.getById(subscriptionResponse.plan_id)
-      ]);
-      
-      setMember(memberResponse);
-      setPlan(planResponse);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch subscription details');
@@ -293,7 +283,7 @@ function SubscriptionDetailContent() {
         {/* Subscription Information Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Member Information */}
-          {member && (
+          {subscription.member && (
             <Card>
               <CardHeader>
                 <h3 className="text-lg font-semibold">Member Information</h3>
@@ -303,24 +293,24 @@ function SubscriptionDetailContent() {
                   <div>
                     <label className="text-sm font-medium text-gray-500">Member Name</label>
                     <button
-                      onClick={() => router.push(`/members/${member.id}`)}
+                      onClick={() => subscription.member?.id && router.push(`/members/${subscription.member.id}`)}
                       className="block text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
                     >
-                      {member.full_name}
+                      {subscription.member?.full_name}
                     </button>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Email</label>
-                    <p className="text-sm text-gray-900">{member.email}</p>
+                    <p className="text-sm text-gray-900">{subscription.member?.email}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Phone</label>
-                    <p className="text-sm text-gray-900">{member.phone}</p>
+                    <p className="text-sm text-gray-900">{subscription.member?.phone}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Status</label>
-                    <Badge variant={member.status === 'active' ? 'active' : 'inactive'}>
-                      {member.status}
+                    <Badge variant={subscription.member?.status === 'active' ? 'active' : 'inactive'}>
+                      {subscription.member?.status}
                     </Badge>
                   </div>
                 </div>
@@ -329,7 +319,7 @@ function SubscriptionDetailContent() {
           )}
 
           {/* Plan Information */}
-          {plan && (
+          {subscription.plan && (
             <Card>
               <CardHeader>
                 <h3 className="text-lg font-semibold">Plan Information</h3>
@@ -338,19 +328,19 @@ function SubscriptionDetailContent() {
                 <div className="grid grid-cols-1 gap-3">
                   <div>
                     <label className="text-sm font-medium text-gray-500">Plan Name</label>
-                    <p className="text-sm font-medium text-gray-900">{plan.plan_name}</p>
+                    <p className="text-sm font-medium text-gray-900">{subscription.plan?.plan_name}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Duration</label>
-                    <p className="text-sm text-gray-900">{plan.duration_months} month(s)</p>
+                    <p className="text-sm text-gray-900">{subscription.plan?.duration_months} month(s)</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Total Fee</label>
-                    <p className="text-sm font-medium text-gray-900">{formatCurrency(plan.total_fee)}</p>
+                    <p className="text-sm font-medium text-gray-900">{subscription.plan?.total_fee && formatCurrency(subscription.plan.total_fee)}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Pause Days Allowed</label>
-                    <p className="text-sm text-gray-900">{plan.pause_days_allowed} days</p>
+                    <p className="text-sm text-gray-900">{subscription.plan?.pause_days_allowed} days</p>
                   </div>
                 </div>
               </CardContent>

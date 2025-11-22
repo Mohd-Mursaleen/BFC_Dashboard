@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input, Select } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { LoadingTable } from '@/components/ui/loading';
+import { Pagination } from '@/components/ui/pagination';
 import { ConfirmModal } from '@/components/ui/modal';
 import { useNotification } from '@/components/ui/notification';
 import { MemberForm } from '@/components/forms/member-form';
@@ -43,16 +44,54 @@ function MembersContent() {
   const [deletingMember, setDeletingMember] = useState<Member | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  const [pagination, setPagination] = useState({
+    page: 1,
+    page_size: 50,
+    total: 0,
+    total_pages: 1
+  });
+
   useEffect(() => {
-    fetchMembers();
-  }, [statusFilter]);
+    // Debounce search to avoid too many API calls
+    const timeoutId = setTimeout(() => {
+      fetchMembers();
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [pagination.page, pagination.page_size, statusFilter, genderFilter, searchTerm]);
 
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      // Always fetch all members and filter on client side for better UX
-      const response = await membersApi.getAll();
-      setMembers(response);
+      
+      const params: Record<string, string> = {
+        page: pagination.page.toString(),
+        page_size: pagination.page_size.toString(),
+      };
+
+      if (statusFilter !== 'all') params.status = statusFilter;
+      if (genderFilter !== 'all') params.gender = genderFilter;
+      if (searchTerm) params.search = searchTerm;
+
+      const response = await membersApi.getAll(params);
+      
+      // Handle paginated response format: {data: Member[], pagination: {...}}
+      if (response.data && response.pagination) {
+        setMembers(response.data);
+        setPagination(prev => ({
+          ...prev,
+          total: response.pagination.total,
+          total_pages: response.pagination.total_pages
+        }));
+      } else {
+        // Fallback for non-paginated response (shouldn't happen with updated API)
+        const data = Array.isArray(response) ? response : (response.data || []);
+        setMembers(data);
+        setPagination(prev => ({
+          ...prev,
+          total: data.length,
+          total_pages: 1
+        }));
+      }
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch members');
@@ -96,17 +135,6 @@ function MembersContent() {
   const handleFormSuccess = () => {
     fetchMembers();
   };
-
-  const filteredMembers = members.filter(member => {
-    const matchesSearch = member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.phone.includes(searchTerm);
-    
-    const matchesStatus = statusFilter === 'all' || member.status === statusFilter;
-    const matchesGender = genderFilter === 'all' || member.gender === genderFilter;
-    
-    return matchesSearch && matchesStatus && matchesGender;
-  });
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -168,6 +196,7 @@ function MembersContent() {
                     setStatusFilter('active');
                     setGenderFilter('all');
                     setSearchTerm('');
+                    setPagination(prev => ({ ...prev, page: 1 }));
                   }}
                 >
                   Clear Filters
@@ -181,12 +210,18 @@ function MembersContent() {
                 label="Search"
                 placeholder="Search by name, email, or phone..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPagination(prev => ({ ...prev, page: 1 }));
+                }}
               />
               <Select
                 label="Status"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPagination(prev => ({ ...prev, page: 1 }));
+                }}
                 options={[
                   { value: 'all', label: 'All Status' },
                   { value: 'active', label: 'Active Members' },
@@ -197,7 +232,10 @@ function MembersContent() {
               <Select
                 label="Gender"
                 value={genderFilter}
-                onChange={(e) => setGenderFilter(e.target.value)}
+                onChange={(e) => {
+                  setGenderFilter(e.target.value);
+                  setPagination(prev => ({ ...prev, page: 1 }));
+                }}
                 options={[
                   { value: 'all', label: 'All Genders' },
                   { value: 'male', label: 'Male' },
@@ -215,7 +253,10 @@ function MembersContent() {
                   <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md">
                     Status: {statusFilter === 'all' ? 'All' : statusFilter}
                     <button
-                      onClick={() => setStatusFilter('active')}
+                      onClick={() => {
+                        setStatusFilter('active');
+                        setPagination(prev => ({ ...prev, page: 1 }));
+                      }}
                       className="text-blue-600 hover:text-blue-800"
                     >
                       ×
@@ -226,7 +267,10 @@ function MembersContent() {
                   <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-md">
                     Gender: {genderFilter}
                     <button
-                      onClick={() => setGenderFilter('all')}
+                      onClick={() => {
+                        setGenderFilter('all');
+                        setPagination(prev => ({ ...prev, page: 1 }));
+                      }}
                       className="text-purple-600 hover:text-purple-800"
                     >
                       ×
@@ -237,7 +281,10 @@ function MembersContent() {
                   <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-md">
                     Search: "{searchTerm}"
                     <button
-                      onClick={() => setSearchTerm('')}
+                      onClick={() => {
+                        setSearchTerm('');
+                        setPagination(prev => ({ ...prev, page: 1 }));
+                      }}
                       className="text-green-600 hover:text-green-800"
                     >
                       ×
@@ -257,7 +304,7 @@ function MembersContent() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">
-                  Members ({filteredMembers.length})
+                  Members ({pagination.total})
                 </h3>
                 <Button variant="outline" size="sm" onClick={fetchMembers}>
                   <Icons.refresh size={16} />
@@ -288,7 +335,7 @@ function MembersContent() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredMembers.map((member) => (
+                    {members.map((member) => (
                       <tr 
                         key={member.id} 
                         onClick={() => window.location.href = `/members/${member.id}`}
@@ -348,7 +395,7 @@ function MembersContent() {
                   </tbody>
                 </table>
                 
-                {filteredMembers.length === 0 && (
+                {members.length === 0 && (
                   <div className="text-center py-12">
                     <Icons.members className="mx-auto mb-4 text-gray-400" size={64} />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No members found</h3>
@@ -365,6 +412,7 @@ function MembersContent() {
                           setStatusFilter('active');
                           setGenderFilter('all');
                           setSearchTerm('');
+                          setPagination(prev => ({ ...prev, page: 1 }));
                         }}
                       >
                         Clear All Filters
@@ -373,6 +421,15 @@ function MembersContent() {
                   </div>
                 )}
               </div>
+              
+              <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.total_pages}
+                pageSize={pagination.page_size}
+                totalItems={pagination.total}
+                onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+                onPageSizeChange={(pageSize) => setPagination(prev => ({ ...prev, page_size: pageSize, page: 1 }))}
+              />
             </CardContent>
           </Card>
         )}

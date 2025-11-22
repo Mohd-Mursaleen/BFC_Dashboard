@@ -35,7 +35,6 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🏋️</div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Gym Manager</h1>
           <p className="text-gray-600">Sign in to your account</p>
         </div>
@@ -96,7 +95,7 @@ export default function LoginPage() {
         </Card>
 
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p>© 2024 Gym Management System</p>
+          <p>© 2025 BFC Management System</p>
         </div>
       </div>
     </div>
