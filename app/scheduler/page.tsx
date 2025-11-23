@@ -38,7 +38,7 @@ function SchedulerContent() {
 
   useEffect(() => {
     fetchSchedulerStatus();
-    fetchExpiringSubscriptions();
+    // fetchExpiringSubscriptions();
   }, []);
 
   const fetchSchedulerStatus = async () => {
@@ -80,79 +80,79 @@ function SchedulerContent() {
   };
 
   // WhatsApp functions
-  const testWhatsAppConnection = async () => {
-    try {
-      setTestLoading(true);
-      const response = await whatsappApi.test(testPhone);
-      setTestResult(response);
+  // const testWhatsAppConnection = async () => {
+  //   try {
+  //     setTestLoading(true);
+  //     const response = await whatsappApi.test(testPhone);
+  //     setTestResult(response);
       
-      if (response.connection_status === 'success') {
-        success('WhatsApp Test Successful', 'Test message sent successfully!');
-      } else {
-        showError('WhatsApp Test Failed', response.details.error || 'Failed to send test message');
-      }
-    } catch (err) {
-      showError('WhatsApp Test Failed', err instanceof Error ? err.message : 'Failed to test WhatsApp connection');
-      setTestResult({
-        test_phone: testPhone,
-        connection_status: 'failed',
-        details: {
-          success: false,
-          error: err instanceof Error ? err.message : 'Unknown error'
-        }
-      });
-    } finally {
-      setTestLoading(false);
-    }
-  };
+  //     if (response.connection_status === 'success') {
+  //       success('WhatsApp Test Successful', 'Test message sent successfully!');
+  //     } else {
+  //       showError('WhatsApp Test Failed', response.details.error || 'Failed to send test message');
+  //     }
+  //   } catch (err) {
+  //     showError('WhatsApp Test Failed', err instanceof Error ? err.message : 'Failed to test WhatsApp connection');
+  //     setTestResult({
+  //       test_phone: testPhone,
+  //       connection_status: 'failed',
+  //       details: {
+  //         success: false,
+  //         error: err instanceof Error ? err.message : 'Unknown error'
+  //       }
+  //     });
+  //   } finally {
+  //     setTestLoading(false);
+  //   }
+  // };
 
-  const fetchExpiringSubscriptions = async () => {
-    try {
-      setExpiringLoading(true);
-      const response = await whatsappApi.getExpiringSubscriptions(7);
-      setExpiringData(response);
-    } catch (err) {
-      console.error('Failed to fetch expiring subscriptions:', err);
-    } finally {
-      setExpiringLoading(false);
-    }
-  };
+  // const fetchExpiringSubscriptions = async () => {
+  //   try {
+  //     setExpiringLoading(true);
+  //     const response = await whatsappApi.getExpiringSubscriptions(7);
+  //     setExpiringData(response);
+  //   } catch (err) {
+  //     console.error('Failed to fetch expiring subscriptions:', err);
+  //   } finally {
+  //     setExpiringLoading(false);
+  //   }
+  // };
 
-  const sendExpiryReminders = async () => {
-    try {
-      setReminderLoading(true);
-      const response = await whatsappApi.sendExpiryReminders();
-      setReminderResult(response);
+  // const sendExpiryReminders = async () => {
+  //   try {
+  //     setReminderLoading(true);
+  //     const response = await whatsappApi.sendExpiryReminders();
+  //     setReminderResult(response);
       
-      if (response.success) {
-        success(
-          'Reminders Sent',
-          `${response.notifications_sent} reminders sent successfully${response.notifications_failed > 0 ? `, ${response.notifications_failed} failed` : ''}`
-        );
-        fetchExpiringSubscriptions(); // Refresh the list
-      }
-    } catch (err) {
-      showError('Failed to Send Reminders', err instanceof Error ? err.message : 'Failed to send expiry reminders');
-    } finally {
-      setReminderLoading(false);
-    }
-  };
+  //     if (response.success) {
+  //       success(
+  //         'Reminders Sent',
+  //         `${response.notifications_sent} reminders sent successfully${response.notifications_failed > 0 ? `, ${response.notifications_failed} failed` : ''}`
+  //       );
+  //       fetchExpiringSubscriptions(); // Refresh the list
+  //     }
+  //   } catch (err) {
+  //     showError('Failed to Send Reminders', err instanceof Error ? err.message : 'Failed to send expiry reminders');
+  //   } finally {
+  //     setReminderLoading(false);
+  //   }
+  // };
 
-  const triggerExpiryReminders = async () => {
-    try {
-      setReminderLoading(true);
-      const response = await schedulerApi.triggerExpiryReminders();
+  // const triggerExpiryReminders = async () => {
+  //   try {
+  //     setReminderLoading(true);
+  //     const response = await schedulerApi.triggerExpiryReminders();
       
-      if (response.success) {
-        success('Reminder Job Triggered', 'Expiry reminder check executed successfully');
-        fetchExpiringSubscriptions(); // Refresh the list
-      }
-    } catch (err) {
-      showError('Failed to Trigger Reminders', err instanceof Error ? err.message : 'Failed to trigger expiry reminders');
-    } finally {
-      setReminderLoading(false);
-    }
-  };
+  //     if (response.success) {
+  //       success('Reminder Job Triggered', 'Expiry reminder check executed successfully');
+  //       fetchExpiringSubscriptions(); // Refresh the list
+  //     }
+  //   } catch (err) {
+  //     showError('Failed to Trigger Reminders', err instanceof Error ? err.message : 'Failed to trigger expiry reminders');
+  //   } finally {
+  //     setReminderLoading(false);
+  //   }
+  // };
 
   if (error) {
     return (
@@ -375,12 +375,12 @@ function SchedulerContent() {
         )}
 
         {/* WhatsApp Integration Section */}
-        <div className="border-t-4 border-green-500 pt-6">
+        {/* <div className="border-t-4 border-green-500 pt-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">📱 WhatsApp Integration</h2>
-          <p className="text-gray-600 mb-6">Test WhatsApp connection and manage expiry reminders</p>
+          <p className="text-gray-600 mb-6">Test WhatsApp connection and manage expiry reminders</p> */}
 
           {/* WhatsApp Test */}
-          <Card className="mb-6">
+          {/* <Card className="mb-6">
             <CardHeader>
               <h3 className="text-lg font-semibold">Test WhatsApp Connection</h3>
             </CardHeader>
@@ -402,7 +402,7 @@ function SchedulerContent() {
                 <div className="flex items-center mt-2 ">
                   <Button
                     variant="primary"
-                    onClick={testWhatsAppConnection}
+                    // onClick={testWhatsAppConnection}
                     loading={testLoading}
                     disabled={testLoading || !testPhone}
                   >
@@ -445,18 +445,18 @@ function SchedulerContent() {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Expiring Subscriptions */}
-          <Card className="mb-6">
+          {/* <Card className="mb-6">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">⏰ Expiring Subscriptions (Next 7 Days)</h3>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={fetchExpiringSubscriptions}>
-                    <Icons.refresh size={16} />
+                  {/* <Button variant="outline" size="sm" onClick={fetchExpiringSubscriptions}> */}
+                    {/* <Icons.refresh size={16} />
                     Refresh
-                  </Button>
+                  </Button> */}
                   {/* <Button 
                     variant="success" 
                     size="sm" 
@@ -466,7 +466,7 @@ function SchedulerContent() {
                   >
                     📱 Send Reminders Now
                   </Button> */}
-                </div>
+                {/* </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -537,11 +537,11 @@ function SchedulerContent() {
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </CardContent> */}
+          {/* </Card> */} 
 
           {/* WhatsApp Info */}
-          <Card>
+          {/* <Card>
             <CardHeader>
               <h3 className="text-lg font-semibold">📱 WhatsApp Notifications</h3>
             </CardHeader>
@@ -578,9 +578,9 @@ function SchedulerContent() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
-      </div>
+      {/* </div> */}
     </Layout>
   );
 }

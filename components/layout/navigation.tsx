@@ -19,7 +19,7 @@ export function Navigation({ isMobile = false, onItemClick }: NavigationProps) {
     { href: '/members', label: 'Members', Icon: Icons.members },
     { href: '/plans', label: 'Plans', Icon: Icons.plans },
     { href: '/subscriptions', label: 'Subscriptions', Icon: Icons.subscriptions },
-    { href: '/whatsapp-broadcast', label: 'WhatsApp Broadcast', Icon: Icons.whatsapp },
+    // { href: '/whatsapp-broadcast', label: 'WhatsApp Broadcast', Icon: Icons.whatsapp },
     { href: '/scheduler', label: 'Scheduler', Icon: Icons.scheduler },
   ];
 
