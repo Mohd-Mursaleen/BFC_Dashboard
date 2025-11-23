@@ -25,7 +25,8 @@ import {
   FaSearch,
   FaFilter,
   FaPlay,
-  FaStop
+  FaStop,
+  FaTimes
 } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
 import { HiOutlineRefresh } from 'react-icons/hi';
@@ -74,6 +75,7 @@ export const Icons = {
   // Communication
   phone: FaPhone,
   bell: FaBell,
+  close: FaTimes,
 };
 
 export type IconName = keyof typeof Icons;

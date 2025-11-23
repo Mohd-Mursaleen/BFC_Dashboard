@@ -20,13 +20,20 @@ const COLORS = {
 };
 
 export function SubscriptionStatusChart({ data }: SubscriptionStatusChartProps) {
-  const chartData = Object.entries(data).map(([name, value]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
-    value,
-    color: COLORS[name as keyof typeof COLORS],
-  }));
+  // Ensure we have numbers, defaulting to 0 if undefined/null
+  const safeData = {
+    active: data?.active ?? 0,
+    paused: data?.paused ?? 0,
+    expired: data?.expired ?? 0,
+  };
 
-  const total = chartData.reduce((sum, item) => sum + item.value, 0);
+  const chartData = [
+    { name: 'Active', value: safeData.active, color: COLORS.active },
+    { name: 'Paused', value: safeData.paused, color: COLORS.paused },
+    { name: 'Expired', value: safeData.expired, color: COLORS.expired },
+  ].filter(item => item.value > 0); // Only show segments with data
+
+  const total = safeData.active + safeData.paused + safeData.expired;
 
   return (
     <Card>
@@ -63,17 +70,17 @@ export function SubscriptionStatusChart({ data }: SubscriptionStatusChartProps) 
         <div className="mt-4 grid grid-cols-4 gap-4">
           <div className="text-center p-2 bg-green-50 rounded-lg">
             <Icons.active className="mx-auto mb-1 text-green-600" size={20} />
-            <div className="text-lg font-bold text-gray-900">{data.active}</div>
+            <div className="text-lg font-bold text-gray-900">{safeData.active}</div>
             <div className="text-xs text-gray-600">Active</div>
           </div>
           <div className="text-center p-2 bg-orange-50 rounded-lg">
             <Icons.paused className="mx-auto mb-1 text-orange-600" size={20} />
-            <div className="text-lg font-bold text-gray-900">{data.paused}</div>
+            <div className="text-lg font-bold text-gray-900">{safeData.paused}</div>
             <div className="text-xs text-gray-600">Paused</div>
           </div>
           <div className="text-center p-2 bg-red-50 rounded-lg">
             <Icons.expired className="mx-auto mb-1 text-red-600" size={20} />
-            <div className="text-lg font-bold text-gray-900">{data.expired}</div>
+            <div className="text-lg font-bold text-gray-900">{safeData.expired}</div>
             <div className="text-xs text-gray-600">Expired</div>
           </div>
           <div className="text-center p-2 bg-blue-50 rounded-lg border-2 border-blue-200">

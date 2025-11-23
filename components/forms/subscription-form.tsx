@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Input, Select } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useNotification } from '@/components/ui/notification';
 import { subscriptionsApi, membersApi, plansApi } from '@/lib/api';
 import type { Subscription, Member, Plan } from '@/lib/types';
+import { Icons } from '@/lib/icons';
 
 interface SubscriptionFormProps {
   isOpen: boolean;
@@ -19,7 +20,15 @@ interface SubscriptionFormProps {
 export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, preSelectedMemberId }: SubscriptionFormProps) {
   const { success, error } = useNotification();
   const [loading, setLoading] = useState(false);
-  const [members, setMembers] = useState<Member[]>([]);
+  
+  // Member Search States
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const [memberSearchResults, setMemberSearchResults] = useState<Member[]>([]);
+  const [isSearchingMembers, setIsSearchingMembers] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [showMemberResults, setShowMemberResults] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   
@@ -35,7 +44,15 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Update form data when subscription prop changes
+  // Initialize form and fetch initial data
+  useEffect(() => {
+    if (isOpen) {
+      fetchPlans();
+      initializeMemberData();
+    }
+  }, [isOpen, subscription, preSelectedMemberId]);
+
+  // Update form data when subscription changes
   useEffect(() => {
     if (subscription) {
       setFormData({
@@ -48,29 +65,21 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
         receipt_number: subscription.receipt_number || '',
       });
     } else {
-      // Reset form for new subscription
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         member_id: preSelectedMemberId || '',
         plan_id: '',
         start_date: new Date().toISOString().split('T')[0],
         end_date: '',
         amount_paid: '',
-        payment_mode: 'cash' as 'cash' | 'upi' | 'card' | 'bank_transfer' | 'cheque',
+        payment_mode: 'cash',
         receipt_number: '',
-      });
+      }));
     }
-    // Clear errors when subscription changes
     setErrors({});
   }, [subscription, preSelectedMemberId, isOpen]);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchMembers();
-      fetchPlans();
-    }
-  }, [isOpen]);
-
-  // Auto-calculate end date when start date or plan changes
+  // Auto-calculate end date
   useEffect(() => {
     if (formData.start_date && selectedPlan) {
       const startDate = new Date(formData.start_date);
@@ -85,18 +94,30 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
     }
   }, [formData.start_date, selectedPlan]);
 
-  // Update selected plan when plan_id changes
+  // Update selected plan
   useEffect(() => {
     const plan = plans.find(p => p.id === formData.plan_id);
     setSelectedPlan(plan || null);
   }, [formData.plan_id, plans]);
 
-  const fetchMembers = async () => {
-    try {
-      const response = await membersApi.getAll({ status: 'active' });
-      setMembers(response);
-    } catch (err) {
-      error('Failed to load members', err instanceof Error ? err.message : 'Unknown error');
+  const initializeMemberData = async () => {
+    // If we have a subscription with a nested member object, use it
+    if (subscription?.member) {
+      setSelectedMember(subscription.member);
+      return;
+    }
+
+    // If we have a member ID (from subscription or pre-selection) but no object, fetch it
+    const targetMemberId = subscription?.member_id || preSelectedMemberId;
+    if (targetMemberId) {
+      try {
+        const member = await membersApi.getById(targetMemberId);
+        setSelectedMember(member);
+      } catch (err) {
+        console.error('Failed to fetch member details:', err);
+      }
+    } else {
+      setSelectedMember(null);
     }
   };
 
@@ -107,6 +128,53 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
     } catch (err) {
       error('Failed to load plans', err instanceof Error ? err.message : 'Unknown error');
     }
+  };
+
+  const handleMemberSearch = (query: string) => {
+    setMemberSearchQuery(query);
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (!query.trim()) {
+      setMemberSearchResults([]);
+      setShowMemberResults(false);
+      return;
+    }
+
+    setIsSearchingMembers(true);
+    setShowMemberResults(true);
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await membersApi.getAll({ 
+          search: query, 
+          status: 'active',
+          page_size: '5' // Limit results for dropdown
+        });
+        // Handle paginated response or array
+        const results = Array.isArray(response) ? response : (response.data || []);
+        setMemberSearchResults(results);
+      } catch (err) {
+        console.error('Member search failed:', err);
+      } finally {
+        setIsSearchingMembers(false);
+      }
+    }, 300); // 300ms debounce
+  };
+
+  const selectMember = (member: Member) => {
+    setSelectedMember(member);
+    setFormData(prev => ({ ...prev, member_id: member.id }));
+    setMemberSearchQuery('');
+    setShowMemberResults(false);
+  };
+
+  const clearSelectedMember = () => {
+    setSelectedMember(null);
+    setFormData(prev => ({ ...prev, member_id: '' }));
+    setMemberSearchQuery('');
   };
 
   const validateForm = () => {
@@ -137,7 +205,6 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
       newErrors.receipt_number = 'Receipt number is required';
     }
 
-    // Validate dates
     if (formData.start_date && formData.end_date) {
       const startDate = new Date(formData.start_date);
       const endDate = new Date(formData.end_date);
@@ -193,18 +260,9 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
     if (!loading) {
       onClose();
       setErrors({});
-      // Reset form data when closing
-      if (!subscription) {
-        setFormData({
-          member_id: preSelectedMemberId || '',
-          plan_id: '',
-          start_date: new Date().toISOString().split('T')[0],
-          end_date: '',
-          amount_paid: '',
-          payment_mode: 'cash' as 'cash' | 'upi' | 'card' | 'bank_transfer' | 'cheque',
-          receipt_number: '',
-        });
-      }
+      setMemberSearchQuery('');
+      setShowMemberResults(false);
+      // Reset form data is handled by useEffect
     }
   };
 
@@ -223,21 +281,75 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Select
-            label="Member *"
-            value={formData.member_id}
-            onChange={(e) => setFormData({ ...formData, member_id: e.target.value })}
-            options={[
-              { value: '', label: 'Select a member' },
-              ...members.map(member => ({
-                value: member.id,
-                label: `${member.full_name} (${member.email})`
-              }))
-            ]}
-            error={errors.member_id}
-            disabled={loading || !!subscription || !!preSelectedMemberId}
-            helperText={preSelectedMemberId ? 'Member is pre-selected from the member page' : undefined}
-          />
+          
+          {/* Member Selection - Replaced Dropdown with Search */}
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Member *
+            </label>
+            
+            {selectedMember ? (
+              <div className="flex items-center justify-between p-2 border border-blue-200 bg-blue-50 rounded-md">
+                <div className="overflow-hidden">
+                  <div className="font-medium text-blue-900 truncate">{selectedMember.full_name}</div>
+                  <div className="text-xs text-blue-700 truncate">{selectedMember.email}</div>
+                </div>
+                {!preSelectedMemberId && (
+                  <button
+                    type="button"
+                    onClick={clearSelectedMember}
+                    className="ml-2 text-blue-500 hover:text-blue-700 p-1"
+                    disabled={loading}
+                  >
+                    <Icons.close size={16} />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="relative">
+                <Input
+                  value={memberSearchQuery}
+                  onChange={(e) => handleMemberSearch(e.target.value)}
+                  placeholder="Search member by name or phone..."
+                  error={errors.member_id}
+                  disabled={loading}
+                  className="pr-8"
+                />
+                {isSearchingMembers && (
+                  <div className="absolute right-3 top-2.5">
+                    <Icons.refresh className="animate-spin text-gray-400" size={16} />
+                  </div>
+                )}
+                
+                {/* Search Results Dropdown */}
+                {showMemberResults && memberSearchResults.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    {memberSearchResults.map((member) => (
+                      <div
+                        key={member.id}
+                        onClick={() => selectMember(member)}
+                        className="p-2 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                      >
+                        <div className="font-medium text-gray-900">{member.full_name}</div>
+                        <div className="text-xs text-gray-500 flex justify-between">
+                          <span>{member.phone}</span>
+                          <span>{member.email}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {showMemberResults && memberSearchResults.length === 0 && memberSearchQuery && !isSearchingMembers && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-3 text-center text-sm text-gray-500">
+                    No members found
+                  </div>
+                )}
+              </div>
+            )}
+            {errors.member_id && <p className="text-xs text-red-500 mt-1">{errors.member_id}</p>}
+            {preSelectedMemberId && <p className="text-xs text-gray-500 mt-1">Pre-selected from member page</p>}
+          </div>
 
           <Select
             label="Plan *"
