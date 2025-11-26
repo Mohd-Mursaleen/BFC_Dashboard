@@ -65,6 +65,7 @@ export const Icons = {
   calendar: FaCalendarAlt,
   
   // Charts
+  chart: FaChartBar,
   chartBar: FaChartBar,
   chartPie: FaChartPie,
   chartLine: FaChartLine,

@@ -9,6 +9,8 @@ import { WhatsAppTestConnection } from '@/components/whatsapp/test-connection';
 import { BulkMessaging } from '@/components/whatsapp/bulk-messaging';
 import { WhatsAppStatusWidget } from '@/components/whatsapp/status-widget';
 import { ExpiringMembersWidget } from '@/components/whatsapp/expiring-members';
+import { LimitStatsWidget } from '@/components/whatsapp/limit-stats';
+import { QueueStatsWidget } from '@/components/whatsapp/queue-stats';
 import { whatsappApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,23 +26,38 @@ export default function WhatsAppBroadcastPage() {
 function WhatsAppBroadcastContent() {
   const [isConnected, setIsConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Check initial status to determine view
   useEffect(() => {
     const checkStatus = async () => {
       try {
         const data = await whatsappApi.getSessionStatus();
-        setIsConnected(data.status === 'WORKING');
+        const wasConnected = isConnected;
+        const nowConnected = data.status === 'WORKING';
+        
+        setIsConnected(nowConnected);
+        
         // If not connected, show settings by default
-        if (data.status !== 'WORKING') {
+        if (!nowConnected) {
           setShowSettings(true);
+        }
+        
+        // If we just connected (transition from disconnected to connected), refresh components
+        if (!wasConnected && nowConnected) {
+          console.log('WhatsApp connected! Refreshing components...');
+          setRefreshKey(prev => prev + 1);
         }
       } catch (e) {
         console.error(e);
       }
     };
     checkStatus();
-  }, []);
+  }, [isConnected]);
+
+  const handleManualRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   return (
     <Layout title="WhatsApp Broadcast">
@@ -59,6 +76,17 @@ function WhatsAppBroadcastContent() {
           
           <div className="flex items-center gap-3">
             <WhatsAppStatusWidget />
+            {isConnected && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleManualRefresh}
+                className="flex items-center gap-2"
+              >
+                <Icons.refresh size={16} />
+                Refresh
+              </Button>
+            )}
             <Button 
               variant="outline" 
               size="sm"
@@ -80,10 +108,22 @@ function WhatsAppBroadcastContent() {
         )}
 
         {/* Main Content */}
-        {isConnected || !showSettings ? (
+        {isConnected ? (
           <div className="space-y-6">
-            <ExpiringMembersWidget />
-            <BulkMessaging />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="h-full">
+                <ExpiringMembersWidget key={`expiring-${refreshKey}`} />
+              </div>
+              <div className="flex flex-col gap-2 h-full">
+                <div className="flex-1">
+                  <LimitStatsWidget key={`limit-${refreshKey}`} />
+                </div>
+                <div className="flex-1">
+                  <QueueStatsWidget key={`queue-${refreshKey}`} />
+                </div>
+              </div>
+            </div>
+            <BulkMessaging key={`bulk-${refreshKey}`} />
           </div>
         ) : (
           <Card className="bg-gray-50 border-dashed">

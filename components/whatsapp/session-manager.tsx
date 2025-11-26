@@ -24,6 +24,9 @@ export function WhatsAppSessionManager() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [isFetchingQR, setIsFetchingQR] = useState(false);
+  
+  // Track previous status to detect changes
+  const prevStatusRef = React.useRef<string | null>(null);
 
   useEffect(() => {
     checkStatus();
@@ -37,11 +40,14 @@ export function WhatsAppSessionManager() {
       const data = await whatsappApi.getSessionStatus();
       setStatus(data);
       
-      // If status changed from SCAN_QR_CODE to WORKING, clear QR code
-      if (data.status === 'WORKING' && qrCode) {
+      // Check for status change to WORKING
+      if (prevStatusRef.current !== 'WORKING' && data.status === 'WORKING') {
         setQrCode(null);
         showSuccess('Connected!', 'WhatsApp session is now active');
       }
+      
+      // Update previous status
+      prevStatusRef.current = data.status;
       
       // If status is SCAN_QR_CODE and we don't have QR yet, fetch it
       // Use guard to prevent concurrent fetches
@@ -67,11 +73,10 @@ export function WhatsAppSessionManager() {
       
       // Handle race condition: User scanned QR while we were fetching
       if (error instanceof Error && (error.message.includes('500') || error.message.includes('No input text'))) {
-        console.log('QR fetch failed - likely session was authenticated. Checking status...');
+        console.log('QR fetch failed - likely session was authenticated. Waiting for next poll...');
         setQrCode(null);
-        // Immediately check status - session is likely WORKING now
-        checkStatus();
-        // Don't show error - this is actually good news (user scanned QR)
+        // Do NOT call checkStatus() immediately to avoid rapid loops.
+        // The interval will pick up the new status in <2s.
       } else if (error instanceof Error && error.message.includes('404')) {
         showError('QR Not Ready', 'QR code not available yet. Please wait a moment and the page will retry automatically.');
       } else {
@@ -85,16 +90,19 @@ export function WhatsAppSessionManager() {
   const startSession = async () => {
     setLoading(true);
     setQrCode(null);
+    // Optimistically update status to show feedback immediately
+    setStatus({ success: true, status: 'STARTING' });
+    
     try {
       await whatsappApi.startSession();
       showSuccess('Starting...', 'WhatsApp session is starting');
       
-      // Wait a moment then check status
-      setTimeout(() => {
-        checkStatus();
-      }, 2000);
+      // Check status immediately to catch the transition
+      await checkStatus();
     } catch (error) {
       showError('Failed to Start', error instanceof Error ? error.message : 'Failed to start session');
+      // Revert status on error
+      checkStatus();
     } finally {
       setLoading(false);
     }

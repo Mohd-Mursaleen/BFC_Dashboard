@@ -187,4 +187,8 @@ export const whatsappApi = {
       body: JSON.stringify({ recipients })
     });
   },
+  
+  // Queue Management
+  getQueueStats: () => apiCall('/api/whatsapp/queue/stats'),
+  getLimitStats: () => apiCall('/api/whatsapp/limits/stats'),
 };

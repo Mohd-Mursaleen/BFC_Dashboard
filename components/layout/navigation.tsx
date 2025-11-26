@@ -20,7 +20,7 @@ export function Navigation({ isMobile = false, onItemClick }: NavigationProps) {
     { href: '/plans', label: 'Plans', Icon: Icons.plans },
     { href: '/subscriptions', label: 'Subscriptions', Icon: Icons.subscriptions },
     { href: '/whatsapp-broadcast', label: 'WhatsApp Broadcast', Icon: Icons.whatsapp },
-    { href: '/scheduler', label: 'Scheduler', Icon: Icons.scheduler },
+    // { href: '/scheduler', label: 'Scheduler', Icon: Icons.scheduler },
   ];
 
   const isActive = (href: string) => pathname === href;
