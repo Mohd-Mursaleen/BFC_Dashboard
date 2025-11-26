@@ -26,7 +26,8 @@ import {
   FaFilter,
   FaPlay,
   FaStop,
-  FaTimes
+  FaTimes,
+  FaQrcode
 } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
 import { HiOutlineRefresh } from 'react-icons/hi';
@@ -43,11 +44,12 @@ export const Icons = {
   
   // Actions
   addMember: FaUserPlus,
-  refresh: FaSyncAlt,
+  refresh: HiOutlineRefresh,
   search: FaSearch,
   filter: FaFilter,
   play: FaPlay,
   stop: FaStop,
+  pause: FaPauseCircle,
   
   // Status
   active: FaCheckCircle,
@@ -76,6 +78,8 @@ export const Icons = {
   phone: FaPhone,
   bell: FaBell,
   close: FaTimes,
+  settings: FaCog,
+  qr: FaQrcode,
 };
 
 export type IconName = keyof typeof Icons;
