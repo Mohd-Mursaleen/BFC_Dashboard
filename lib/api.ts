@@ -154,7 +154,8 @@ export const whatsappApi = {
     });
     
     if (!response.ok) {
-      throw new Error('Failed to fetch QR code');
+      const errorText = await response.text().catch(() => 'Unknown error');
+      throw new Error(`Failed to fetch QR code (${response.status}): ${errorText}`);
     }
     
     const blob = await response.blob();

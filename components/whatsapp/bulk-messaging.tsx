@@ -8,6 +8,7 @@ import { whatsappApi, membersApi } from '@/lib/api';
 import { Icons } from '@/lib/icons';
 import type { Member } from '@/lib/types';
 import { Input } from '@/components/ui/input';
+import { useWhatsAppStatus } from '@/lib/whatsapp-context';
 
 interface BulkSendResult {
   total: number;
@@ -23,6 +24,7 @@ interface BulkSendResult {
 
 export function BulkMessaging() {
   const { success: showSuccess, error: showError } = useNotification();
+  const { isConnected } = useWhatsAppStatus();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -264,7 +266,7 @@ export function BulkMessaging() {
 
               <Button
                 onClick={sendBulkMessages}
-                disabled={sending || selectedIds.size === 0 || !message.trim()}
+                disabled={sending || selectedIds.size === 0 || !message.trim() || !isConnected}
                 className="w-full"
                 size="lg"
               >
@@ -276,10 +278,16 @@ export function BulkMessaging() {
                 ) : (
                   <>
                     <Icons.whatsapp className="mr-2" size={18} />
-                    Send to {selectedIds.size} Members
+                    Send to {selectedIds.size} Member{selectedIds.size !== 1 ? 's' : ''}
                   </>
                 )}
               </Button>
+              
+              {!isConnected && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                  ⚠️ WhatsApp is disconnected. Please connect to send messages.
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

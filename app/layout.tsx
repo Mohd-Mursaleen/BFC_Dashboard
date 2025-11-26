@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { NotificationProvider } from "@/components/ui/notification";
+import { WhatsAppProvider } from "@/lib/whatsapp-context";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,7 +25,9 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <NotificationProvider>
           <AuthProvider>
-            {children}
+            <WhatsAppProvider>
+              {children}
+            </WhatsAppProvider>
           </AuthProvider>
         </NotificationProvider>
       </body>

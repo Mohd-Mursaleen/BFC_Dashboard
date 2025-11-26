@@ -23,6 +23,7 @@ export function WhatsAppSessionManager() {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [isFetchingQR, setIsFetchingQR] = useState(false);
 
   useEffect(() => {
     checkStatus();
@@ -43,7 +44,8 @@ export function WhatsAppSessionManager() {
       }
       
       // If status is SCAN_QR_CODE and we don't have QR yet, fetch it
-      if (data.status === 'SCAN_QR_CODE' && !qrCode) {
+      // Use guard to prevent concurrent fetches
+      if (data.status === 'SCAN_QR_CODE' && !qrCode && !isFetchingQR) {
         fetchQRCode();
       }
     } catch (error) {
@@ -54,11 +56,29 @@ export function WhatsAppSessionManager() {
   };
 
   const fetchQRCode = async () => {
+    if (isFetchingQR) return; // Prevent concurrent fetches
+    
+    setIsFetchingQR(true);
     try {
       const qrImageUrl = await whatsappApi.getSessionQR();
       setQrCode(qrImageUrl);
     } catch (error) {
       console.error('Failed to fetch QR code:', error);
+      
+      // Handle race condition: User scanned QR while we were fetching
+      if (error instanceof Error && (error.message.includes('500') || error.message.includes('No input text'))) {
+        console.log('QR fetch failed - likely session was authenticated. Checking status...');
+        setQrCode(null);
+        // Immediately check status - session is likely WORKING now
+        checkStatus();
+        // Don't show error - this is actually good news (user scanned QR)
+      } else if (error instanceof Error && error.message.includes('404')) {
+        showError('QR Not Ready', 'QR code not available yet. Please wait a moment and the page will retry automatically.');
+      } else {
+        showError('QR Fetch Failed', error instanceof Error ? error.message : 'Could not fetch QR code');
+      }
+    } finally {
+      setIsFetchingQR(false);
     }
   };
 
@@ -92,13 +112,21 @@ export function WhatsAppSessionManager() {
   };
 
   const logout = async () => {
+    setLoading(true);
     try {
+      // Backend now handles logout + automatic session restart
       await whatsappApi.logoutSession();
-      showSuccess('Logged Out', 'WhatsApp session logged out. You will need to scan QR code again.');
+      showSuccess('Logged Out', 'Session logged out. A new session has been started. Please scan the QR code.');
       setQrCode(null);
-      checkStatus();
+      
+      // Check status immediately - backend has already started new session
+      await checkStatus();
+      
+      // If status is SCAN_QR_CODE, the checkStatus will trigger QR fetch automatically
     } catch (error) {
       showError('Failed to Logout', error instanceof Error ? error.message : 'Failed to logout');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -216,17 +244,7 @@ export function WhatsAppSessionManager() {
         {/* QR Code Scanning State */}
         {status?.status === 'SCAN_QR_CODE' && (
           <div className="space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-3">📱 Scan QR Code with WhatsApp</h4>
-              <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
-                <li>Open WhatsApp on your phone</li>
-                <li>Go to <strong>Settings → Linked Devices</strong></li>
-                <li>Tap <strong>"Link a Device"</strong></li>
-                <li>Scan the QR code below</li>
-              </ol>
-            </div>
-            
-            {qrCode ? (
+              {qrCode ? (
               <div className="flex flex-col items-center space-y-3">
                 <img 
                   src={qrCode} 
@@ -241,6 +259,16 @@ export function WhatsAppSessionManager() {
                 <span className="ml-3 text-gray-600">Loading QR code...</span>
               </div>
             )}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
+                <li>Open WhatsApp on your phone</li>
+                <li>Go to <strong>Settings → Linked Devices</strong></li>
+                <li>Tap <strong>"Link a Device"</strong></li>
+                <li>Scan the QR code below</li>
+              </ol>
+            </div>
+            
+            
           </div>
         )}
 
