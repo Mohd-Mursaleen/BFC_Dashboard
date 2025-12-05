@@ -11,7 +11,7 @@ import type { WhatsAppTestResponse } from '@/lib/types';
 
 export function WhatsAppTestConnection() {
   const { success, error: showError } = useNotification();
-  const [testPhone, setTestPhone] = useState('918218134534');
+  const [testPhone, setTestPhone] = useState('919987654321');
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState<WhatsAppTestResponse | null>(null);
 
@@ -66,11 +66,11 @@ export function WhatsAppTestConnection() {
             type="text"
             value={testPhone}
             onChange={(e) => setTestPhone(e.target.value)}
-            placeholder="918218134534"
+            placeholder="918218134535"
             className="font-mono"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Format: Country code + number (e.g., 918218134534 for India)
+            Format: Country code + number (e.g., 918218134535 for India)
           </p>
         </div>
 
