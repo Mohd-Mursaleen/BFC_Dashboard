@@ -150,7 +150,6 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
       try {
         const response = await membersApi.getAll({ 
           search: query, 
-          status: 'active',
           page_size: '5' // Limit results for dropdown
         });
         // Handle paginated response or array
