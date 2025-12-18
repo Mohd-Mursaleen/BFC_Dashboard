@@ -284,6 +284,25 @@ function MemberDetailContent() {
             </CardContent>
           </Card>
 
+          {/* Emergency Contact Information */}
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Emergency Contact</h3>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Contact Name</label>
+                  <p className="text-sm text-gray-900">{member.emergency_contact_name || 'Not provided'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Contact Number</label>
+                  <p className="text-sm text-gray-900">{member.emergency_contact_number || 'Not provided'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Physical Information */}
           <Card>
             <CardHeader>

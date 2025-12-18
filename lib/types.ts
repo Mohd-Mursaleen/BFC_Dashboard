@@ -25,6 +25,8 @@ export interface Member {
   } | null;
   status: 'active' | 'inactive' | 'suspended';
   preferred_gym_slot?: '5:30am-7:30am' | '7:30am-9:30am' | '9:30am-11:30am' | '4:00pm-6:00pm' | '6:00pm-8:00pm' | '8:00pm-10:00pm';
+  emergency_contact_name?: string;
+  emergency_contact_number?: string;
   created_at: string;
   updated_at: string;
 }
