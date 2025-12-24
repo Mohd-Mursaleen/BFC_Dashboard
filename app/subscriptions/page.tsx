@@ -260,6 +260,9 @@ function SubscriptionsContent() {
                         Plan
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Trainer
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Duration
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -295,6 +298,13 @@ function SubscriptionsContent() {
                           <div className="text-sm text-gray-500">
                             {subscription.payment_mode.toUpperCase()}
                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {subscription.need_trainer ? (
+                            <Badge variant="active">Yes</Badge>
+                          ) : (
+                            <span className="text-sm text-gray-500">No</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">

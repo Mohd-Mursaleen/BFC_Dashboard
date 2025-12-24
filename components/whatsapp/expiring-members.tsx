@@ -110,7 +110,7 @@ export function ExpiringMembersWidget() {
         );
       }
     } catch (error) {
-      showError('Send Failed', error instanceof Error ? error.message : 'Failed to send reminders');
+      showError('WhatsApp Error', error instanceof Error ? error.message : 'Failed to send reminders');
     } finally {
       setSending(false);
     }

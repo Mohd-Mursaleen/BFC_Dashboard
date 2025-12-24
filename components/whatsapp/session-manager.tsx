@@ -100,7 +100,8 @@ export function WhatsAppSessionManager() {
       // Check status immediately to catch the transition
       await checkStatus();
     } catch (error) {
-      showError('Failed to Start', error instanceof Error ? error.message : 'Failed to start session');
+      const errorMsg = error instanceof Error ? error.message : 'Failed to start session';
+      showError('WhatsApp Error', errorMsg);
       // Revert status on error
       checkStatus();
     } finally {

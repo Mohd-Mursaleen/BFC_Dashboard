@@ -342,6 +342,18 @@ function SubscriptionDetailContent() {
                     <label className="text-sm font-medium text-gray-500">Pause Days Allowed</label>
                     <p className="text-sm text-gray-900">{subscription.plan?.pause_days_allowed} days</p>
                   </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Personal Trainer Required</label>
+                    <p className="text-sm font-medium text-gray-900">
+                      {subscription.need_trainer ? (
+                        <span className="text-green-600 flex items-center gap-1">
+                          <span>✅</span> Yes
+                        </span>
+                      ) : (
+                        <span className="text-gray-500">No</span>
+                      )}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

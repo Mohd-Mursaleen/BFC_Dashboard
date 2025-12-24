@@ -40,6 +40,7 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
     amount_paid: '',
     payment_mode: 'cash' as 'cash' | 'upi' | 'card' | 'bank_transfer' | 'cheque',
     receipt_number: '',
+    need_trainer: false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -63,6 +64,7 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
         amount_paid: subscription.amount_paid?.toString() || '',
         payment_mode: subscription.payment_mode || 'cash',
         receipt_number: subscription.receipt_number || '',
+        need_trainer: subscription.need_trainer || false,
       });
     } else {
       setFormData(prev => ({
@@ -74,6 +76,7 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
         amount_paid: '',
         payment_mode: 'cash',
         receipt_number: '',
+        need_trainer: false,
       }));
     }
     setErrors({});
@@ -236,6 +239,7 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
         amount_paid: Number(formData.amount_paid),
         payment_mode: formData.payment_mode,
         receipt_number: formData.receipt_number,
+        need_trainer: formData.need_trainer,
       };
 
       if (subscription) {
@@ -408,6 +412,20 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
             ]}
             disabled={loading}
           />
+        </div>
+
+        <div className="flex items-center space-x-2 py-2">
+          <input
+            type="checkbox"
+            id="need_trainer"
+            checked={formData.need_trainer}
+            onChange={(e) => setFormData({ ...formData, need_trainer: e.target.checked })}
+            disabled={loading}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label htmlFor="need_trainer" className="text-sm font-medium text-gray-700">
+            Personal Trainer Required
+          </label>
         </div>
 
         <div className="flex gap-2">

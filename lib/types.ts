@@ -60,6 +60,7 @@ export interface Subscription {
   amount_paid: number;
   payment_mode: 'cash' | 'upi' | 'card' | 'bank_transfer' | 'cheque';
   receipt_number: string;
+  need_trainer: boolean;
   created_at: string;
   updated_at: string;
   // Joined fields from list endpoint (limited data)
@@ -168,6 +169,7 @@ export interface PauseInfo {
   remaining_pause_days_if_resumed_today?: number;
   current_pause_start_date?: string;
   status: string;
+  need_trainer?: boolean;
 }
 
 export interface AutoResumeResult {
@@ -180,8 +182,12 @@ export interface AutoResumeResult {
 // WhatsApp API Types
 export interface WhatsAppTestResponse {
   test_phone: string;
-  connection_status: 'success' | 'failed';
-  details: {
+  success?: boolean;
+  connection_status: 'success' | 'failed' | 'failed_not_connected' | string;
+  status?: string;
+  message?: string;
+  error?: string;
+  details?: {
     success: boolean;
     message_id?: string;
     error?: string;

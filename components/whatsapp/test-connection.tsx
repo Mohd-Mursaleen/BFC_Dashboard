@@ -28,10 +28,11 @@ export function WhatsAppTestConnection() {
       const data = await whatsappApi.test(testPhone);
       setResult(data);
       
-      if (data.connection_status === 'success') {
+      if (data.connection_status === 'success' || data.success === true) {
         success('Test Successful!', 'WhatsApp message sent successfully');
       } else {
-        showError('Test Failed', data.details?.error || 'Failed to send test message');
+        const errorMsg = data.message || data.error || data.details?.error || 'Failed to send test message';
+        showError('WhatsApp Error', errorMsg);
       }
     } catch (error) {
       const errorResult: WhatsAppTestResponse = {
@@ -117,11 +118,20 @@ export function WhatsAppTestConnection() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Icons.expired className="text-red-600" size={20} />
-                  <span className="font-medium text-red-900">Test Failed</span>
+                  <span className="font-medium text-red-900">
+                    {result.status === 'STOPPED' || result.connection_status === 'failed_not_connected' 
+                      ? 'WhatsApp Disconnected' 
+                      : 'Test Failed'}
+                  </span>
                 </div>
                 <p className="text-sm text-red-700">
-                  {result.details?.error || 'Failed to send test message'}
+                  {result.message || result.error || result.details?.error || 'Failed to send test message'}
                 </p>
+                {result.status && (
+                  <p className="text-xs text-red-600 font-medium">
+                    Status: {result.status}
+                  </p>
+                )}
                 {result.details?.status_code && (
                   <p className="text-xs text-red-600">
                     Status Code: {result.details.status_code}

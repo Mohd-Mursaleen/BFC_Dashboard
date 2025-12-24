@@ -139,7 +139,7 @@ export function BulkMessaging() {
         showError('Some Failed', `${data.failed} messages failed to send`);
       }
     } catch (error) {
-      showError('Send Failed', error instanceof Error ? error.message : 'Failed to send messages');
+      showError('WhatsApp Error', error instanceof Error ? error.message : 'Failed to send messages');
     } finally {
       setSending(false);
     }
