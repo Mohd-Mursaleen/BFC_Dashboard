@@ -103,9 +103,7 @@ export function MemberForm({ isOpen, onClose, onSuccess, member }: MemberFormPro
       newErrors.full_name = 'Full name is required';
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    if (formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
 
@@ -212,7 +210,7 @@ export function MemberForm({ isOpen, onClose, onSuccess, member }: MemberFormPro
           />
 
           <Input
-            label="Email *"
+            label="Email"
             type="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}

@@ -3,7 +3,7 @@
 export interface Member {
   id: string;
   full_name: string;
-  email: string;
+  email?: string;
   phone: string;
   date_of_birth: string;
   gender: 'male' | 'female' | 'other';
