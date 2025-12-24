@@ -28,7 +28,6 @@ export function MemberForm({ isOpen, onClose, onSuccess, member }: MemberFormPro
     height: '',
     weight: '',
     address: '',
-    status: 'active' as 'active' | 'inactive' | 'suspended',
     preferred_gym_slot: '5:30am-7:30am' as '5:30am-7:30am' | '7:30am-9:30am' | '9:30am-11:30am' | '4:00pm-6:00pm' | '6:00pm-8:00pm' | '8:00pm-10:00pm',
   });
 
@@ -63,7 +62,6 @@ export function MemberForm({ isOpen, onClose, onSuccess, member }: MemberFormPro
         height: member.height?.toString() || '',
         weight: member.weight?.toString() || '',
         address: member.address || '',
-        status: member.status || 'active',
         preferred_gym_slot: member.preferred_gym_slot || '5:30am-7:30am',
       });
 
@@ -87,7 +85,6 @@ export function MemberForm({ isOpen, onClose, onSuccess, member }: MemberFormPro
         height: '',
         weight: '',
         address: '',
-        status: 'active',
         preferred_gym_slot: '5:30am-7:30am',
       });
       setMedicalHistory([]);
@@ -183,7 +180,6 @@ export function MemberForm({ isOpen, onClose, onSuccess, member }: MemberFormPro
           height: '',
           weight: '',
           address: '',
-          status: 'active',
           preferred_gym_slot: '5:30am-7:30am',
         });
         setMedicalHistory([]);
@@ -242,18 +238,6 @@ export function MemberForm({ isOpen, onClose, onSuccess, member }: MemberFormPro
               { value: 'male', label: 'Male' },
               { value: 'female', label: 'Female' },
               { value: 'other', label: 'Other' },
-            ]}
-            disabled={loading}
-          />
-
-          <Select
-            label="Status"
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-            options={[
-              { value: 'active', label: 'Active' },
-              { value: 'inactive', label: 'Inactive' },
-              // { value: 'suspended', label: 'Suspended' },
             ]}
             disabled={loading}
           />
