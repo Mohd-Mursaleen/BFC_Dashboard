@@ -361,7 +361,7 @@ function MembersContent() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900 flex items-center gap-2">
                             <HiOutlineMail className="text-gray-400" size={16} />
-                            {member.email}
+                            {member.email || 'No email'}
                           </div>
                           <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
                             <HiOutlinePhone className="text-gray-400" size={16} />

@@ -73,7 +73,7 @@ export function BulkMessaging() {
         return (
           member.full_name.toLowerCase().includes(query) ||
           member.phone.includes(query) ||
-          member.email.toLowerCase().includes(query)
+          (member.email?.toLowerCase().includes(query) ?? false)
         );
       }
 

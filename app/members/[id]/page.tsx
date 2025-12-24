@@ -249,7 +249,7 @@ function MemberDetailContent() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Email</label>
-                  <p className="text-sm text-gray-900">{member.email}</p>
+                  <p className="text-sm text-gray-900">{member.email || 'Not provided'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Phone</label>
