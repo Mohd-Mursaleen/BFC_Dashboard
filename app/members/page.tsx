@@ -354,7 +354,7 @@ function MembersContent() {
                               {member.full_name}
                             </div>
                             <div className="text-sm text-gray-500 ml-6">
-                              {calculateAge(member.date_of_birth)} years old
+                              {member.date_of_birth ? `${calculateAge(member.date_of_birth)} years old` : 'Age not provided'}
                             </div>
                           </div>
                         </td>

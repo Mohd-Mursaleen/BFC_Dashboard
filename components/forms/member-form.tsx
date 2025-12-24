@@ -113,9 +113,8 @@ export function MemberForm({ isOpen, onClose, onSuccess, member }: MemberFormPro
       newErrors.phone = 'Phone number must be 10 digits';
     }
 
-    if (!formData.date_of_birth) {
-      newErrors.date_of_birth = 'Date of birth is required';
-    }
+    // Date of birth is optional
+
 
     if (formData.height && (isNaN(Number(formData.height)) || Number(formData.height) <= 0)) {
       newErrors.height = 'Height must be a positive number';
@@ -227,7 +226,7 @@ export function MemberForm({ isOpen, onClose, onSuccess, member }: MemberFormPro
           />
 
           <Input
-            label="Date of Birth *"
+            label="Date of Birth"
             type="date"
             value={formData.date_of_birth}
             onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}

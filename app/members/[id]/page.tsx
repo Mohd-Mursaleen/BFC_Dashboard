@@ -258,7 +258,9 @@ function MemberDetailContent() {
                 <div>
                   <label className="text-sm font-medium text-gray-500">Date of Birth</label>
                   <p className="text-sm text-gray-900">
-                    {formatDate(member.date_of_birth)} ({calculateAge(member.date_of_birth)} years)
+                    {member.date_of_birth 
+                      ? `${formatDate(member.date_of_birth)} (${calculateAge(member.date_of_birth)} years)`
+                      : 'Not provided'}
                   </p>
                 </div>
                 <div>
