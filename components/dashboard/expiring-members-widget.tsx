@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { useNotification } from '@/components/ui/notification';
-import { subscriptionsApi } from '@/lib/api';
+import { subscriptionsApi, whatsappApi } from '@/lib/api';
 import { Icons } from '@/lib/icons';
 
 interface ExpiringSubscription {
@@ -32,11 +32,12 @@ interface SubscriptionFromAPI {
 }
 
 export function ExpiringMembersWidget() {
-  const { error: showError } = useNotification();
+  const { success, error, warning } = useNotification();
   const [data, setData] = useState<ExpiringSubscriptionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sendingReminders, setSendingReminders] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchExpiringMembers();
@@ -82,9 +83,33 @@ export function ExpiringMembersWidget() {
       });
     } catch (err) {
       console.error('Failed to fetch expiring members:', err);
-      showError('Failed to Load', 'Could not fetch expiring subscriptions');
+      error('Failed to Load', 'Could not fetch expiring subscriptions');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const sendExpiryReminder = async (subscription: ExpiringSubscription) => {
+    setSendingReminders(prev => new Set(prev).add(subscription.subscription_id));
+    
+    try {
+      await whatsappApi.sendExpiry({
+        member_phone: subscription.member_phone,
+        member_name: subscription.member_name,
+        days_remaining: subscription.days_remaining,
+        end_date: subscription.end_date
+      });
+      
+      success('Reminder Sent!', `Expiry reminder sent to ${subscription.member_name}`);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to send reminder';
+      error('Reminder Failed', errorMsg);
+    } finally {
+      setSendingReminders(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(subscription.subscription_id);
+        return newSet;
+      });
     }
   };
 
@@ -200,6 +225,7 @@ export function ExpiringMembersWidget() {
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {displayedSubscriptions.map((sub) => {
                     const isUrgent = sub.days_remaining <= 3;
+                    const isSending = sendingReminders.has(sub.subscription_id);
                     return (
                       <div 
                         key={sub.subscription_id} 
@@ -234,16 +260,37 @@ export function ExpiringMembersWidget() {
                               Expires: {new Date(sub.end_date).toLocaleDateString()}
                             </div>
                           </div>
-                          <div className="text-right ml-4">
-                            <div className={`text-2xl font-bold ${
-                              isUrgent ? 'text-red-600' : 'text-yellow-600'
-                            }`}>
-                              {sub.days_remaining}
+                          <div className="flex items-center gap-3 ml-4">
+                            <div className="text-right">
+                              <div className={`text-2xl font-bold ${
+                                isUrgent ? 'text-red-600' : 'text-yellow-600'
+                              }`}>
+                                {sub.days_remaining}
+                              </div>
+                              <div className="text-xs text-gray-600">
+                                {sub.days_remaining === 0 ? 'expires today' : 
+                                 sub.days_remaining === 1 ? 'day left' : 'days left'}
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-600">
-                              {sub.days_remaining === 0 ? 'expires today' : 
-                               sub.days_remaining === 1 ? 'day left' : 'days left'}
-                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => sendExpiryReminder(sub)}
+                              disabled={isSending}
+                              className="flex items-center gap-1 text-xs"
+                            >
+                              {isSending ? (
+                                <>
+                                  <Icons.refresh className="animate-spin" size={12} />
+                                  Sending...
+                                </>
+                              ) : (
+                                <>
+                                  <Icons.whatsapp size={12} />
+                                  Send Reminder
+                                </>
+                              )}
+                            </Button>
                           </div>
                         </div>
                       </div>

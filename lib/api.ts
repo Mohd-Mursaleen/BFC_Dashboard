@@ -10,6 +10,53 @@ export interface ApiResponse<T = any> {
   details?: any;
 }
 
+// Member creation response with WhatsApp notification details
+export interface MemberCreateResponse {
+  id: string;
+  full_name: string;
+  phone: string;
+  notification_sent: boolean;
+  whatsapp_message_id: string | null;
+  whatsapp_error: string | null;
+}
+
+// Subscription creation response with WhatsApp notification details
+export interface SubscriptionCreateResponse {
+  id: string;
+  member_id: string;
+  plan_id: string;
+  start_date: string;
+  end_date: string;
+  actual_end_date: string;
+  total_pause_days_allowed: number;
+  pause_days_used: number;
+  pause_days_remaining: number;
+  is_currently_paused: boolean;
+  current_pause_start_date: string | null;
+  status: string;
+  amount_paid: number;
+  payment_mode: string;
+  receipt_number: string;
+  need_trainer: boolean;
+  created_at: string;
+  updated_at: string;
+  member: {
+    id: string;
+    full_name: string;
+    phone: string;
+    email: string;
+  };
+  plan: {
+    id: string;
+    plan_name: string;
+    duration_months: number;
+    price: number;
+  };
+  notification_sent: boolean;
+  whatsapp_message_id: string | null;
+  whatsapp_error: string | null;
+}
+
 // Auth token management
 export const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null;
@@ -81,7 +128,8 @@ export const membersApi = {
     return apiCall(`/api/members/${query}`);
   },
   getById: (id: string) => apiCall(`/api/members/${id}`),
-  create: (data: any) => apiCall('/api/members/', { method: 'POST', body: JSON.stringify(data) }),
+  create: (data: any): Promise<MemberCreateResponse> => 
+    apiCall('/api/members/', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: any) => apiCall(`/api/members/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => apiCall(`/api/members/${id}`, { method: 'DELETE' }),
 };
@@ -107,7 +155,8 @@ export const subscriptionsApi = {
   },
   getById: (id: string) => apiCall(`/api/subscriptions/${id}`),
   getPauseInfo: (id: string) => apiCall(`/api/subscriptions/${id}/pause-info`),
-  create: (data: any) => apiCall('/api/subscriptions/', { method: 'POST', body: JSON.stringify(data) }),
+  create: (data: any): Promise<SubscriptionCreateResponse> => 
+    apiCall('/api/subscriptions/', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: any) => apiCall(`/api/subscriptions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => apiCall(`/api/subscriptions/${id}`, { method: 'DELETE' }),
   pause: (id: string, reason?: string) => 
@@ -151,4 +200,8 @@ export const whatsappApi = {
   // Welcome Messages (Template-based)
   sendWelcome: (data: { member_phone: string; member_name: string }) => 
     apiCall('/api/whatsapp/send-welcome', { method: 'POST', body: JSON.stringify(data) }),
+  
+  // Expiry Reminders
+  sendExpiry: (data: { member_phone: string; member_name: string; days_remaining: number; end_date?: string }) => 
+    apiCall('/api/whatsapp/send-expiry', { method: 'POST', body: JSON.stringify(data) }),
 };
