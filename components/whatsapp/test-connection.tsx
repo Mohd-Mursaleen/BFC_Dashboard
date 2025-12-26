@@ -7,17 +7,31 @@ import { Input } from '@/components/ui/input';
 import { useNotification } from '@/components/ui/notification';
 import { whatsappApi } from '@/lib/api';
 import { Icons } from '@/lib/icons';
-import type { WhatsAppTestResponse } from '@/lib/types';
+
+interface WelcomeTestResponse {
+  test_result?: {
+    success: boolean;
+    message_id?: string;
+    template_name?: string;
+    phone: string;
+  };
+  phone: string;
+  name: string;
+  template?: string;
+  success?: boolean;
+  error?: string;
+}
 
 export function WhatsAppTestConnection() {
   const { success, error: showError } = useNotification();
-  const [testPhone, setTestPhone] = useState('919987654321');
+  const [testPhone, setTestPhone] = useState('918218134534');
+  const [testName, setTestName] = useState('Test User');
   const [testing, setTesting] = useState(false);
-  const [result, setResult] = useState<WhatsAppTestResponse | null>(null);
+  const [result, setResult] = useState<WelcomeTestResponse | null>(null);
 
-  const testConnection = async () => {
-    if (!testPhone.trim()) {
-      showError('Invalid Input', 'Please enter a phone number');
+  const testWelcomeMessage = async () => {
+    if (!testPhone.trim() || !testName.trim()) {
+      showError('Invalid Input', 'Please enter both phone number and name');
       return;
     }
 
@@ -25,26 +39,27 @@ export function WhatsAppTestConnection() {
     setResult(null);
     
     try {
-      const data = await whatsappApi.test(testPhone);
+      const data = await whatsappApi.testWelcome({
+        member_phone: testPhone,
+        member_name: testName
+      });
       setResult(data);
       
-      if (data.connection_status === 'success' || data.success === true) {
-        success('Test Successful!', 'WhatsApp message sent successfully');
+      if (data.test_result?.success || data.success) {
+        success('Test Successful!', 'Welcome template message sent successfully');
       } else {
-        const errorMsg = data.message || data.error || data.details?.error || 'Failed to send test message';
+        const errorMsg = data.error || data.test_result?.error || 'Failed to send test message';
         showError('WhatsApp Error', errorMsg);
       }
     } catch (error) {
-      const errorResult: WhatsAppTestResponse = {
-        test_phone: testPhone,
-        connection_status: 'failed',
-        details: {
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        }
+      const errorResult: WelcomeTestResponse = {
+        phone: testPhone,
+        name: testName,
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
       setResult(errorResult);
-      showError('Test Failed', error instanceof Error ? error.message : 'Failed to test connection');
+      showError('Test Failed', error instanceof Error ? error.message : 'Failed to test welcome message');
     } finally {
       setTesting(false);
     }
@@ -55,7 +70,7 @@ export function WhatsAppTestConnection() {
       <CardHeader>
         <div className="flex items-center gap-3">
           <span className="text-2xl">🧪</span>
-          <h3 className="text-lg font-semibold">Test WhatsApp Connection</h3>
+          <h3 className="text-lg font-semibold">Test Welcome Template</h3>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -67,17 +82,32 @@ export function WhatsAppTestConnection() {
             type="text"
             value={testPhone}
             onChange={(e) => setTestPhone(e.target.value)}
-            placeholder="918218134535"
+            placeholder="918218134534"
             className="font-mono"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Format: Country code + number (e.g., 918218134535 for India)
+            Format: Country code + number (e.g., 918218134534 for India)
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Test Name
+          </label>
+          <Input
+            type="text"
+            value={testName}
+            onChange={(e) => setTestName(e.target.value)}
+            placeholder="Test User"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Name to be used in the welcome template
           </p>
         </div>
 
         <Button 
-          onClick={testConnection} 
-          disabled={testing || !testPhone.trim()}
+          onClick={testWelcomeMessage} 
+          disabled={testing || !testPhone.trim() || !testName.trim()}
           className="w-full"
         >
           {testing ? (
@@ -88,29 +118,34 @@ export function WhatsAppTestConnection() {
           ) : (
             <>
               <Icons.whatsapp size={16} />
-              Send Test Message
+              Send Welcome Template
             </>
           )}
         </Button>
 
         {result && (
           <div className={`rounded-lg p-4 ${
-            result.connection_status === 'success' 
+            result.test_result?.success || result.success
               ? 'bg-green-50 border border-green-200' 
               : 'bg-red-50 border border-red-200'
           }`}>
-            {result.connection_status === 'success' ? (
+            {result.test_result?.success || result.success ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Icons.success className="text-green-600" size={20} />
-                  <span className="font-medium text-green-900">Test Message Sent!</span>
+                  <span className="font-medium text-green-900">Welcome Template Sent!</span>
                 </div>
                 <p className="text-sm text-green-700">
-                  Message successfully sent to {result.test_phone}
+                  Template message successfully sent to {result.phone}
                 </p>
-                {result.details?.message_id && (
+                {result.test_result?.template_name && (
+                  <div className="mt-2 p-2 bg-green-100 rounded text-xs">
+                    <strong>Template:</strong> {result.test_result.template_name}
+                  </div>
+                )}
+                {result.test_result?.message_id && (
                   <div className="mt-2 p-2 bg-green-100 rounded text-xs font-mono text-green-800 break-all">
-                    Message ID: {result.details.message_id}
+                    <strong>Message ID:</strong> {result.test_result.message_id}
                   </div>
                 )}
               </div>
@@ -118,25 +153,11 @@ export function WhatsAppTestConnection() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Icons.expired className="text-red-600" size={20} />
-                  <span className="font-medium text-red-900">
-                    {result.status === 'STOPPED' || result.connection_status === 'failed_not_connected' 
-                      ? 'WhatsApp Disconnected' 
-                      : 'Test Failed'}
-                  </span>
+                  <span className="font-medium text-red-900">Test Failed</span>
                 </div>
                 <p className="text-sm text-red-700">
-                  {result.message || result.error || result.details?.error || 'Failed to send test message'}
+                  {result.error || 'Failed to send welcome template'}
                 </p>
-                {result.status && (
-                  <p className="text-xs text-red-600 font-medium">
-                    Status: {result.status}
-                  </p>
-                )}
-                {result.details?.status_code && (
-                  <p className="text-xs text-red-600">
-                    Status Code: {result.details.status_code}
-                  </p>
-                )}
               </div>
             )}
           </div>
@@ -144,7 +165,8 @@ export function WhatsAppTestConnection() {
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <p className="text-xs text-blue-800">
-            <strong>Note:</strong> This will send a test message to verify your WhatsApp connection is working properly.
+            <strong>Note:</strong> This sends a welcome template message via WATI. 
+            The template content is managed in the WATI dashboard.
           </p>
         </div>
       </CardContent>

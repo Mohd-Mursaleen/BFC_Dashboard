@@ -141,55 +141,14 @@ export const schedulerApi = {
 
 // WhatsApp API
 export const whatsappApi = {
-  // Session Management
-  getSessionStatus: () => apiCall('/api/whatsapp/session/status'),
-  startSession: () => apiCall('/api/whatsapp/session/start', { method: 'POST' }),
-  stopSession: () => apiCall('/api/whatsapp/session/stop', { method: 'POST' }),
-  logoutSession: () => apiCall('/api/whatsapp/session/logout', { method: 'POST' }),
-  getSessionQR: async () => {
-    const token = getAuthToken();
-    const response = await fetch(`${API_BASE_URL}/api/whatsapp/session/qr`, {
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error');
-      throw new Error(`Failed to fetch QR code (${response.status}): ${errorText}`);
-    }
-    
-    const blob = await response.blob();
-    return URL.createObjectURL(blob);
-  },
+  // Service Status
+  getStatus: () => apiCall('/api/whatsapp/status'),
   
-  // Messaging
-  test: (testPhone?: string) => {
-    const query = testPhone ? `?test_phone=${testPhone}` : '';
-    return apiCall(`/api/whatsapp/test${query}`);
-  },
-  sendText: (data: { phone: string; text: string }) => 
-    apiCall('/api/whatsapp/send-text', { method: 'POST', body: JSON.stringify(data) }),
-  sendImage: (data: { phone: string; image_url: string; caption?: string }) => 
-    apiCall('/api/whatsapp/send-image', { method: 'POST', body: JSON.stringify(data) }),
+  // Testing
+  testWelcome: (data: { member_phone: string; member_name: string }) => 
+    apiCall('/api/whatsapp/test-welcome', { method: 'POST', body: JSON.stringify(data) }),
+  
+  // Welcome Messages (Template-based)
   sendWelcome: (data: { member_phone: string; member_name: string }) => 
     apiCall('/api/whatsapp/send-welcome', { method: 'POST', body: JSON.stringify(data) }),
-  bulkSend: (data: { recipients: Array<{ phone: string; name: string }>; message: string }) => 
-    apiCall('/api/whatsapp/bulk-send', { method: 'POST', body: JSON.stringify(data) }),
-  
-  // Notifications
-  getExpiringSubscriptions: (days?: number) => {
-    const query = days ? `?days=${days}` : '';
-    return apiCall(`/api/whatsapp/expiring-subscriptions${query}`);
-  },
-  sendExpiryReminders: (recipients: Array<{ name: string; phone: string; end_date: string; days_remaining: number }>) => {
-    return apiCall('/api/whatsapp/send-expiry-reminders', { 
-      method: 'POST',
-      body: JSON.stringify({ recipients })
-    });
-  },
-  
-  // Queue Management
-  getQueueStats: () => apiCall('/api/whatsapp/queue/stats'),
-  getLimitStats: () => apiCall('/api/whatsapp/limits/stats'),
 };

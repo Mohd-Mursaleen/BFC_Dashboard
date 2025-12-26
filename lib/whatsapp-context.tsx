@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { whatsappApi } from '@/lib/api';
 
 interface WhatsAppContextType {
@@ -13,19 +13,13 @@ const WhatsAppContext = createContext<WhatsAppContextType | undefined>(undefined
 
 export function WhatsAppProvider({ children }: { children: React.ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    checkStatus();
-    // Poll every 30 seconds
-    const interval = setInterval(checkStatus, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const [isLoading, setIsLoading] = useState(false);
 
   const checkStatus = async () => {
+    setIsLoading(true);
     try {
-      const data = await whatsappApi.getSessionStatus();
-      setIsConnected(data.status === 'WORKING');
+      const data = await whatsappApi.getStatus();
+      setIsConnected(data.status === 'ACTIVE');
     } catch (error) {
       setIsConnected(false);
     } finally {

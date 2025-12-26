@@ -5,12 +5,34 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { useNotification } from '@/components/ui/notification';
-import { whatsappApi } from '@/lib/api';
-import type { ExpiringSubscriptionsResponse } from '@/lib/types';
+import { subscriptionsApi } from '@/lib/api';
 import { Icons } from '@/lib/icons';
 
+interface ExpiringSubscription {
+  subscription_id: string;
+  member_name: string;
+  member_phone: string;
+  end_date: string;
+  days_remaining: number;
+  plan_name: string;
+}
+
+interface ExpiringSubscriptionsResponse {
+  count: number;
+  subscriptions: ExpiringSubscription[];
+}
+
+interface SubscriptionFromAPI {
+  id: string;
+  member_name: string;
+  member_phone: string;
+  plan_name: string;
+  end_date: string;
+  status: string;
+}
+
 export function ExpiringMembersWidget() {
-  const { success, error: showError } = useNotification();
+  const { error: showError } = useNotification();
   const [data, setData] = useState<ExpiringSubscriptionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
@@ -23,10 +45,44 @@ export function ExpiringMembersWidget() {
   const fetchExpiringMembers = async () => {
     try {
       setLoading(true);
-      const response = await whatsappApi.getExpiringSubscriptions(7);
-      setData(response);
+      // Get all subscriptions and filter for expiring ones
+      const response = await subscriptionsApi.getAll();
+      const subscriptions: SubscriptionFromAPI[] = response.data || [];
+      
+      // Calculate expiring subscriptions (next 7 days)
+      const today = new Date();
+      const sevenDaysFromNow = new Date();
+      sevenDaysFromNow.setDate(today.getDate() + 7);
+      
+      const expiringSubscriptions = subscriptions
+        .filter((sub: SubscriptionFromAPI) => {
+          if (sub.status !== 'active') return false;
+          const endDate = new Date(sub.end_date);
+          return endDate >= today && endDate <= sevenDaysFromNow;
+        })
+        .map((sub: SubscriptionFromAPI) => {
+          const endDate = new Date(sub.end_date);
+          const timeDiff = endDate.getTime() - today.getTime();
+          const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+          
+          return {
+            subscription_id: sub.id,
+            member_name: sub.member_name || 'Unknown',
+            member_phone: sub.member_phone || 'N/A',
+            end_date: sub.end_date,
+            days_remaining: Math.max(0, daysRemaining),
+            plan_name: sub.plan_name || 'Unknown Plan'
+          };
+        })
+        .sort((a, b) => a.days_remaining - b.days_remaining);
+
+      setData({
+        count: expiringSubscriptions.length,
+        subscriptions: expiringSubscriptions
+      });
     } catch (err) {
       console.error('Failed to fetch expiring members:', err);
+      showError('Failed to Load', 'Could not fetch expiring subscriptions');
     } finally {
       setLoading(false);
     }
@@ -36,7 +92,7 @@ export function ExpiringMembersWidget() {
     return (
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-semibold">📱 WhatsApp Reminders - Expiring Soon</h3>
+          <h3 className="text-lg font-semibold">⏰ Expiring Subscriptions</h3>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
@@ -49,7 +105,8 @@ export function ExpiringMembersWidget() {
 
   const filteredSubscriptions = data?.subscriptions.filter(sub => 
     sub.member_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sub.member_phone.includes(searchTerm)
+    sub.member_phone.includes(searchTerm) ||
+    sub.plan_name.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const displayedSubscriptions = showAll 
@@ -61,9 +118,9 @@ export function ExpiringMembersWidget() {
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Icons.whatsapp className="text-green-600" size={28} />
+            <Icons.clock className="text-orange-600" size={28} />
             <div>
-              <h3 className="text-lg font-semibold">WhatsApp Reminders - Expiring Soon</h3>
+              <h3 className="text-lg font-semibold">Expiring Subscriptions</h3>
               <p className="text-sm text-gray-600">Members with subscriptions expiring in the next 7 days</p>
             </div>
           </div>
@@ -71,8 +128,9 @@ export function ExpiringMembersWidget() {
             variant="outline" 
             size="sm" 
             onClick={fetchExpiringMembers}
+            disabled={loading}
           >
-            <Icons.refresh className="mr-2" size={16} />
+            <Icons.refresh className={`mr-2 ${loading ? 'animate-spin' : ''}`} size={16} />
             Refresh
           </Button>
         </div>
@@ -123,7 +181,7 @@ export function ExpiringMembersWidget() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search by name or phone..."
+                    placeholder="Search by name, phone, or plan..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -161,13 +219,19 @@ export function ExpiringMembersWidget() {
                                 </span>
                               )}
                             </div>
-                            <div className="text-sm text-gray-600 mt-1 flex items-center gap-1">
-                              <Icons.phone size={14} />
-                              {sub.member_phone}
+                            <div className="text-sm text-gray-600 mt-1 flex items-center gap-4">
+                              <div className="flex items-center gap-1">
+                                <Icons.phone size={14} />
+                                {sub.member_phone}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Icons.plans size={14} />
+                                {sub.plan_name}
+                              </div>
                             </div>
                             <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                               <Icons.calendar size={12} />
-                              Expires: {sub.end_date}
+                              Expires: {new Date(sub.end_date).toLocaleDateString()}
                             </div>
                           </div>
                           <div className="text-right ml-4">
@@ -176,7 +240,10 @@ export function ExpiringMembersWidget() {
                             }`}>
                               {sub.days_remaining}
                             </div>
-                            <div className="text-xs text-gray-600">days left</div>
+                            <div className="text-xs text-gray-600">
+                              {sub.days_remaining === 0 ? 'expires today' : 
+                               sub.days_remaining === 1 ? 'day left' : 'days left'}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -214,11 +281,6 @@ export function ExpiringMembersWidget() {
                 <p className="text-sm text-gray-600 mt-2">No subscriptions expiring in the next 7 days</p>
               </div>
             )}
-
-            <div className="flex items-center justify-center gap-2 text-xs text-gray-500 bg-blue-50 p-3 rounded-lg">
-              <Icons.bell className="text-blue-600" size={16} />
-              <span>Reminders are sent automatically daily at 10:00 AM IST</span>
-            </div>
           </>
         )}
       </CardContent>
