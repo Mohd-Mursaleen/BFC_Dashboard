@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/modal';
 import { Input, Select } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useNotification } from '@/components/ui/notification';
-import { subscriptionsApi, membersApi, plansApi } from '@/lib/api';
+import { subscriptionsApi, membersApi, plansApi, type SubscriptionCreateResponse } from '@/lib/api';
 import type { Subscription, Member, Plan } from '@/lib/types';
 import { Icons } from '@/lib/icons';
 
@@ -18,7 +18,7 @@ interface SubscriptionFormProps {
 }
 
 export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, preSelectedMemberId }: SubscriptionFormProps) {
-  const { success, error } = useNotification();
+  const { success, error, warning } = useNotification();
   const [loading, setLoading] = useState(false);
   
   // Member Search States
@@ -246,8 +246,19 @@ export function SubscriptionForm({ isOpen, onClose, onSuccess, subscription, pre
         await subscriptionsApi.update(subscription.id, submitData);
         success('Subscription Updated', 'Subscription has been updated successfully');
       } else {
-        await subscriptionsApi.create(submitData);
-        success('Subscription Created', 'New subscription has been created successfully');
+        const response = await subscriptionsApi.create(submitData);
+        
+        // Simplified toast structure based on WhatsApp notification status
+        if (response.notification_sent) {
+          // Green toast - both subscription created and WhatsApp sent
+          success('Subscription Created Successfully', 'WhatsApp message sent');
+        } else if (response.whatsapp_error) {
+          // Yellow toast - subscription created but WhatsApp failed
+          warning('Subscription Created Successfully', 'WhatsApp message not sent');
+        } else {
+          // Red toast - general error
+          error('Subscription Created', 'WhatsApp message failed');
+        }
       }
 
       onSuccess();

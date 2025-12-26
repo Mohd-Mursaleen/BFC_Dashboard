@@ -3,7 +3,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
-import { WhatsAppConnectionIndicator } from '@/components/whatsapp/connection-indicator';
 
 interface HeaderProps {
   title?: string;
@@ -34,10 +33,6 @@ export function Header({ title = 'Gym Management', onMenuToggle }: HeaderProps) 
         </div>
 
         <div className="flex items-center gap-3">
-          <WhatsAppConnectionIndicator />
-          
-          
-          
           <Button
             variant="outline"
             size="sm"

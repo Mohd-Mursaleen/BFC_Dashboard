@@ -6,7 +6,7 @@ import { Input, Select } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { useNotification } from '@/components/ui/notification';
-import { membersApi } from '@/lib/api';
+import { membersApi, type MemberCreateResponse } from '@/lib/api';
 import type { Member } from '@/lib/types';
 
 interface MemberFormProps {
@@ -17,7 +17,7 @@ interface MemberFormProps {
 }
 
 export function MemberForm({ isOpen, onClose, onSuccess, member }: MemberFormProps) {
-  const { success, error } = useNotification();
+  const { success, error, warning } = useNotification();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
@@ -152,8 +152,19 @@ export function MemberForm({ isOpen, onClose, onSuccess, member }: MemberFormPro
         await membersApi.update(member.id, submitData);
         success('Member Updated', 'Member information has been updated successfully');
       } else {
-        await membersApi.create(submitData);
-        success('Member Added', 'New member has been added successfully');
+        const response = await membersApi.create(submitData);
+        
+        // Simplified toast structure based on WhatsApp notification status
+        if (response.notification_sent) {
+          // Green toast - both member added and WhatsApp sent
+          success('Member Added Successfully', 'WhatsApp message sent');
+        } else if (response.whatsapp_error) {
+          // Yellow toast - member added but WhatsApp failed
+          warning('Member Added Successfully', 'WhatsApp message not sent');
+        } else {
+          // Red toast - general error
+          error('Member Added', 'WhatsApp message failed');
+        }
       }
 
       onSuccess();
