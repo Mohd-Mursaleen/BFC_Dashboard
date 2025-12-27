@@ -34,8 +34,8 @@ interface ExpiryTestResponse {
 
 export function WhatsAppTestConnection() {
   const { success, error: showError } = useNotification();
-  const [testPhone, setTestPhone] = useState('918218134534');
-  const [testName, setTestName] = useState('Test User');
+  const [testPhone, setTestPhone] = useState('918050022645');
+  const [testName, setTestName] = useState('Renuka');
   const [daysRemaining, setDaysRemaining] = useState('7');
   const [testing, setTesting] = useState(false);
   const [testingExpiry, setTestingExpiry] = useState(false);
@@ -197,7 +197,7 @@ export function WhatsAppTestConnection() {
             className="font-mono"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Format: Country code + number (e.g., 918218134534 for India)
+            Format: Country code + number (e.g., 918050022645 for India)
           </p>
         </div>
 
