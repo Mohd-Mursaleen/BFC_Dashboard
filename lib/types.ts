@@ -56,6 +56,7 @@ export interface Subscription {
   pause_days_remaining: number;
   is_currently_paused: boolean;
   current_pause_start_date?: string;
+  scheduled_resume_date?: string;
   status: 'active' | 'paused' | 'expired' | 'cancelled';
   amount_paid: number;
   payment_mode: 'cash' | 'upi' | 'card' | 'bank_transfer' | 'cheque';
@@ -177,6 +178,15 @@ export interface AutoResumeResult {
   checked: number;
   errors: number;
   timestamp: string;
+}
+
+export interface PauseResponse {
+  message: string;
+  start_date: string;
+  pause_days_remaining: number;
+  reason: string;
+  scheduled_resume_date?: string;
+  auto_resume_in_days?: number;
 }
 
 // WhatsApp API Types

@@ -1,6 +1,9 @@
 // API configuration and utilities
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+// Import types
+import type { PauseResponse } from '@/lib/types';
+
 // API response types
 export interface ApiResponse<T = any> {
   data?: T;
@@ -159,10 +162,10 @@ export const subscriptionsApi = {
     apiCall('/api/subscriptions/', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: any) => apiCall(`/api/subscriptions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => apiCall(`/api/subscriptions/${id}`, { method: 'DELETE' }),
-  pause: (id: string, reason?: string) => 
+  pause: (id: string, data: { reason?: string; days?: number }): Promise<PauseResponse> => 
     apiCall(`/api/subscriptions/${id}/pause`, { 
       method: 'POST', 
-      body: JSON.stringify({ reason: reason || 'No reason provided' }) 
+      body: JSON.stringify(data) 
     }),
   resume: (id: string) => apiCall(`/api/subscriptions/${id}/resume`, { method: 'POST' }),
   autoResumeExpired: () => apiCall('/api/subscriptions/auto-resume-expired', { method: 'POST' }),

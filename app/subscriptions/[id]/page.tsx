@@ -11,7 +11,7 @@ import { LoadingSpinner } from '@/components/ui/loading';
 import { ConfirmModal } from '@/components/ui/modal';
 import { useNotification } from '@/components/ui/notification';
 import { SubscriptionForm } from '@/components/forms/subscription-form';
-import { PauseReasonModal } from '@/components/forms/pause-reason-modal';
+import { EnhancedPauseModal } from '@/components/forms/enhanced-pause-modal';
 import { subscriptionsApi } from '@/lib/api';
 import { formatDate as formatDateUtil } from '@/lib/utils';
 import type { Subscription } from '@/lib/types';
@@ -89,14 +89,19 @@ function SubscriptionDetailContent() {
     setShowPauseModal(true);
   };
 
-  const handlePause = async (reason: string) => {
+  const handlePause = async (data: { reason: string; days?: number }) => {
     if (!subscription) return;
 
     try {
       setActionLoading(true);
-      await subscriptionsApi.pause(subscription.id, reason);
+      await subscriptionsApi.pause(subscription.id, data);
       await fetchSubscriptionDetails();
-      success('Subscription Paused', `Subscription has been paused successfully. Reason: ${reason}`);
+      
+      const pauseMessage = data.days 
+        ? `Subscription paused for ${data.days} day${data.days !== 1 ? 's' : ''}. Reason: ${data.reason}`
+        : `Subscription paused indefinitely. Reason: ${data.reason}`;
+      
+      success('Subscription Paused', pauseMessage);
       setShowPauseModal(false);
     } catch (err) {
       showError('Pause Failed', err instanceof Error ? err.message : 'Failed to pause subscription');
@@ -247,6 +252,11 @@ function SubscriptionDetailContent() {
                 {subscription.is_currently_paused && subscription.current_pause_start_date && (
                   <span className="text-sm text-gray-600">
                     Paused since {formatDateUtil(subscription.current_pause_start_date)}
+                    {subscription.scheduled_resume_date && (
+                      <span className="block text-blue-600">
+                        Scheduled to resume on {formatDateUtil(subscription.scheduled_resume_date)}
+                      </span>
+                    )}
                   </span>
                 )}
               </div>
@@ -409,6 +419,14 @@ function SubscriptionDetailContent() {
                   <span className="text-sm text-gray-600">Remaining</span>
                   <span className="text-sm font-medium text-green-600">{subscription.pause_days_remaining} days</span>
                 </div>
+                {subscription.scheduled_resume_date && (
+                  <div className="pt-2 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Scheduled Resume</span>
+                      <span className="text-sm font-medium text-blue-600">{formatDateUtil(subscription.scheduled_resume_date)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -449,12 +467,13 @@ function SubscriptionDetailContent() {
           subscription={subscription}
         />
 
-        {/* Pause Reason Modal */}
-        <PauseReasonModal
+        {/* Enhanced Pause Modal */}
+        <EnhancedPauseModal
           isOpen={showPauseModal}
           onClose={() => setShowPauseModal(false)}
           onConfirm={handlePause}
           loading={actionLoading}
+          maxPauseDays={15}
         />
 
         {/* Resume Confirmation Modal */}
