@@ -69,10 +69,8 @@ function MemberDetailContent() {
   const fetchMemberSubscriptions = async () => {
     try {
       setSubscriptionsLoading(true);
-      // We use the 'search' parameter with memberId to filter on the backend.
-      // This ensures we find the subscription even if it's not on the first page.
-      // NOTE: This assumes the backend 'search' functionality checks the member_id column.
-      const response = await subscriptionsApi.getAll({ search: memberId });
+      // We filter by member_id specificially to get all subscriptions for this member
+      const response = await subscriptionsApi.getAll({ member_id: memberId });
       
       const allSubscriptions = Array.isArray(response) 
         ? response 
