@@ -207,4 +207,8 @@ export const whatsappApi = {
   // Expiry Reminders
   sendExpiry: (data: { member_phone: string; member_name: string; days_remaining: number; end_date?: string }) => 
     apiCall('/api/whatsapp/send-expiry', { method: 'POST', body: JSON.stringify(data) }),
+  
+  // Get Expiring Subscriptions
+  getExpiringSubscriptions: (days: number = 7) => 
+    apiCall(`/api/whatsapp/expiring-subscriptions?days=${days}`),
 };

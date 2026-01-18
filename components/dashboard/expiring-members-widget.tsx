@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { useNotification } from '@/components/ui/notification';
-import { subscriptionsApi, whatsappApi } from '@/lib/api';
+import { whatsappApi } from '@/lib/api';
 import { Icons } from '@/lib/icons';
 
 interface ExpiringSubscription {
@@ -46,39 +46,27 @@ export function ExpiringMembersWidget() {
   const fetchExpiringMembers = async () => {
     try {
       setLoading(true);
-      // Get all subscriptions and filter for expiring ones
-      const response = await subscriptionsApi.getAll();
-      const subscriptions: SubscriptionFromAPI[] = response.data || [];
       
-      // Calculate expiring subscriptions (next 7 days)
-      const today = new Date();
-      const sevenDaysFromNow = new Date();
-      sevenDaysFromNow.setDate(today.getDate() + 7);
+      // Use WhatsApp API to get expiring subscriptions
+      const response = await whatsappApi.getExpiringSubscriptions(7);
       
+      // The API returns: { days_ahead, count, subscriptions: [...] }
+      const subscriptions = response.subscriptions || [];
+      
+      // Map to expected format - API already provides days_remaining
       const expiringSubscriptions = subscriptions
-        .filter((sub: SubscriptionFromAPI) => {
-          if (sub.status !== 'active') return false;
-          const endDate = new Date(sub.end_date);
-          return endDate >= today && endDate <= sevenDaysFromNow;
-        })
-        .map((sub: SubscriptionFromAPI) => {
-          const endDate = new Date(sub.end_date);
-          const timeDiff = endDate.getTime() - today.getTime();
-          const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
-          
-          return {
-            subscription_id: sub.id,
-            member_name: sub.member_name || 'Unknown',
-            member_phone: sub.member_phone || 'N/A',
-            end_date: sub.end_date,
-            days_remaining: Math.max(0, daysRemaining),
-            plan_name: sub.plan_name || 'Unknown Plan'
-          };
-        })
-        .sort((a, b) => a.days_remaining - b.days_remaining);
+        .map((sub: any) => ({
+          subscription_id: sub.subscription_id,
+          member_name: sub.member_name || 'Unknown',
+          member_phone: sub.member_phone || 'N/A',
+          end_date: sub.end_date,
+          days_remaining: sub.days_remaining,
+          plan_name: sub.plan_name || 'N/A' // API might not return this
+        }))
+        .sort((a: ExpiringSubscription, b: ExpiringSubscription) => a.days_remaining - b.days_remaining);
 
       setData({
-        count: expiringSubscriptions.length,
+        count: response.count || expiringSubscriptions.length,
         subscriptions: expiringSubscriptions
       });
     } catch (err) {
